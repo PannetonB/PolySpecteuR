@@ -1,0 +1,81 @@
+---
+title: "Notes sur le développement de PolySpecteuR"
+author: "B. Panneton"
+date: "`r Sys.Date()`"
+output:
+  bookdown::pdf_document2:
+    number_sections: yes
+    toc: yes
+  bookdown::html_document2:
+    number_sections: yes
+    toc: yes
+  bookdown::word_document2:
+    number_sections: yes
+    toc: yes
+fontsize: 12pt
+toccolor: red
+---
+
+# Modifications en cours d'exécution
+
+Dans sa version 3.5_0, **PolySpecteuR_SAAC_2** permet en cours d'exécution, de modifier:
+
+1.  de modifier le plan d'expérience en lisant un nouveau fichier de plan d'expérience;
+
+2.  de modifier les paramètres d'instrument soit en éditant le fichier de l'instrument ou en lisant un nouveau fichier;
+
+3.  de travailler avec plusieurs instruments et de choisir au moment de l'acquisition, l'instrument qui sera utilisé.
+
+Cette flexibilité rend le programme passablement plus complexe. Si en pratique, ces éléments de flexibilité sont peu ou pas utilisés, je recommande qu'on les enlève de la prochaine version de **PolySpecteuR_SAAC_2**.
+
+# PolySpecteuR polyvalent
+
+La version 3.5_0 permet l'acquisition de spectres de fluorescence et de réflectance sur un même échantillon. De mémoire, cela demande de fonctionner avec 2 instruments, un dédié à la fluorescence et l'autre dédié à la réflectance. Il y a aussi une application dédiée pour le Raman, **RamanSpecteuR**.
+
+Il faut choisir la meilleure approche entre une version polyvalente qui supporte tous les types de données et des versions spécialisées à raison d'une version par type de spectre (**FluoSpecteuR**, **RamanSpecteuR**, **ReflecSpecteuR**, **TransmitSpecteuR**). Un des enjeux est la possibilité ou non d'intégrer toutes ces mesures sur un seul instrument. Dans tous les cas, il conviendrait de scinder chaque application en deux parties. Par exemple, pour la fluorescence il y aurait une application pour initialiser les composantes matérielles (e.g. **InitFluoSpecteuR**) et une application pour faire la mesure (e.g. **DoFluoSpecteuR**). Avec cette approche, on pourrait facilement composer une application dédiée combinant les types de mesures désirées. Par exemple, si des mesures de réflectance sur 2 instruments différents et de diffusion Raman sur un instrument sont désirées, un script R serait créé à cette fin. Ce script ressemblerait à ceci:
+
+    #Init phase
+    F_Inst_1 <- InitFluoSpecteuR()  #premier instr. pour fluo
+    F_Inst_2 <- InitFluoSpecteuR()  #deuxième instr. pour fluo
+    R_Inst <- InitRamanSpecteur()   #instrument pour Raman
+    Plan <- GetPlanExp()
+    dataSetID <-utils::winDialogString("Entrer un identifiant pour les noms de fichier                                     de données",as.character(Sys.Date()))
+
+    #Data acquisition phase
+    done <- FALSE
+    while (!done){
+      echID <- PickFromPlan(Plan)
+      writeYFile(echID,dataSetID)
+      FlSp1 <- DoFluoSpecteuR(F_Inst_1,echID,dataSetID)
+      FlSp2 <- DoFluoSpecteuR(F_Inst_2,echID,dataSetID)
+      RaSp  <- DoRamanSpecteuR(R_Inst,echID,dataSetID)
+      dum <- utils::winDialog("yesno","Continuer?")
+      done <- !(dum=="YES")
+    }
+
+    #Clean and close
+    Clean_n_Close(list(F_Inst_1, F_Inst_2,R_Inst))
+
+On voit donc qu'en adoptant une approche par type de mesure où les phases d'initialisation et d'acquisition sont dissociées, il est facile de produire de courts scripts en R pour piloter des sessions d'acquisition polyvalentes.
+
+Si on préfère ne pas utiliser de plan d'expérience et entrer les paramètres décrivant un échantillon au fur et à mesure, la fonction **PickFromPlan** pourrait s'en charger. A ce moment-là, la fonction **GetPlanExp** pourrait retourner dans la variable *Plan*, une liste des noms des champs à saisir pour décrire un échantillon.
+
+Finalement, on pourrait ajouter une fonction pour appliquer des pré-traitements et des modèles. Ici encore, il y aurait une fonction d'initialisation où les fichiers de pré-traitement et du modèle sont identifiés et une fonction d'application qui recevrait les derniers spectres acquis, ferait les calculs et présenterait les résultats.
+
+L'avantage de cette approche est de permettre de développer chaque élément comme un bloc de code autonome et de faciliter la gestion des interactions.
+
+# Entente avec Alain - 3 février
+
+Suite à une rencontre Teams, les points suivants ont été retenus:
+
+1.  On va de l'avant avec l'approche du point \@ref(polyspecteur-polyvalent) plus haut.
+
+2.  Pas de modification de plan d'expérience en cours de session.
+
+3.  Plan d'expérience peut être dans un fichier **ou** les identifiants pour un échantillon sont saisis à la volée lors de la prise de mesure.
+
+4.  La modification des paramètres d'instrument est utile lors de la mise en place de nouvelles manipulations. Voir si ça peut être conservé avec la nouvelle approche. Il y a aussi 2 plans B: la version 3.5 de **PolySpecteuR_SAAC_2** et les programmes d'Ocean Optics et MCDAQ.
+
+5.  Les phases d'étalonnage et de vérification sont faites en début de session lors de l'initialisation.
+
+6.  L'approche modulaire devra inclure des modules d'initialisation et d'application de modèle(s) pour chaque échantillon permettant de présenter les résultats à l'utilisateur et de les enregistrer (dans fichier Y ou dans des fichiers dédiés?). N.B. la coupure de spectre est mise de côté pour l'instant. Elle pourra être intégrée lorsqu'elle sera disponible sur l'ongle *Prepro* de **InSpectoR**.

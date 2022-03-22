@@ -1,0 +1,20 @@
+
+\usepackage{color}
+\usepackage{framed}
+\usepackage{fancyhdr}
+\usepackage{pmboxdraw}
+\pagestyle{fancy}
+\fancyhead[L]{\leftmark}
+\fancyhead[C]{\rightmark}
+\setlength\headheight{40pt} %% just to make warning go away. Adjust the value after looking into the warning.
+\rhead{\includegraphics[width=2cm]{PoLySpecteuR_Logo.png}}
+
+\setlength{\fboxsep}{.8em}
+
+\newenvironment{blackbox}{
+  \definecolor{shadecolor}{rgb}{0.8, 0.8, 0.8}  % light gray
+  \color{black}
+  \begin{shaded}}
+{\end{shaded}}
+
+\pagenumbering{gobble} 

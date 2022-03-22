@@ -1,0 +1,50 @@
+Comment utiliser le SDK de Mightex dans R.
+
+1, Installer RTools comme dans: http://mcglinn.web.unc.edu/blog/linking-c-with-r-in-windows/
+
+2. Écrire un wrapper en C pour les fonctions de la librairie cbw64.dll. Par exemple, pour la fonction cbIgnoreInstaCal, créer un fichier qui s'appelle MC_cbw64_CWrapper.c qui contient:
+#include <R.h>
+
+#define  MAX_PROFILE_ITEM     128
+
+//NOTE-Exemple pour déclarer une structure. Pas utile pour la fonction plus bas.
+#pragma pack(1)
+typedef struct {
+    int Normal_CurrentMax;
+    int Normal_CurrentSet;
+
+    int Strobe_CurrentMax;
+    int Strobe_RepeatCnt;
+    int Strobe_Profile[MAX_PROFILE_ITEM][2];
+
+    int Trigger_CurrentMax;
+    int Trigger_Polarity;
+    int Trigger_Profile[MAX_PROFILE_ITEM][2];
+} TLedChannelData;
+#pragma pack()
+
+
+int MTUSB_LEDDriverDeviceChannels( int DevHandle );
+
+void BP_cbIgnoreInstaCal(int *out)
+{
+	int y;
+	y=cbIgnoreInstaCal();
+	*out=y;
+}
+
+
+3. Compiler le DLL pour le wrapper: Dans une fenêtre DOS, se placer dans le répertoire qui contient Mightex_CWrapper.c et la libraire cbw64.dll et ses amis, faire:
+
+R CMD SHLIB MC_cbw64_CWrapper.c -L. cbw64.dll
+
+Cela crée un fichier MC_cbw64_CWrapper.dll
+
+4. Dans R, utiliser
+dyn.load("MC_cbw64_CWrapper.dll")  #ajuster le path si nécessaire
+
+5. Utiliser la fonction initdriver:
+ err=.C("BP_cbIgnoreInstaCal",out=as.integer(2))$out
+
+
+Cela retourne un code d'erreur. 0 si tout se passe bien.
