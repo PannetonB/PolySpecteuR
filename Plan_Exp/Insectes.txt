@@ -1,3 +1,0 @@
-ECHID	Type_ins	Origine	Lot	Reception	Entrepo	Temps_jr	Lyo	Bouilli	Deshyd	Oxydation	Temps_min	TRT1	TRT2	Note
-G01	Grillon	PC	20181229	20180307	23C	589	ND	ND	ND	Non	NA	NA	NA	NA
-T02	Chenille jaune	Congo	NA	20171005	23C	735	Oui	Oui	Oui	Non	NA	NA	NA	NA
