@@ -1,4 +1,4 @@
-# PolySpecteuR 4.0
+# <img src="PolySpecteuR_Logo.png" width="751"/>PolySpecteuR 4.0
 
 Version plus modulaire des outils pour le contrôle du SpectrAAC2
 
