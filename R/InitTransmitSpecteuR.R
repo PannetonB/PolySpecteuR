@@ -56,7 +56,9 @@ InitTransmitSpecteuR<-function(){
   
   #*****************************************************************************
   ## Fichiers paramètres instrument s----
-  fichier_param <- rchoose.files(caption="TRANSMITTANCE - Choisir le fichier des parametres",
+  laCaption <- paste0("TRANSMITTANCE SUR ",TransmitEnv$nomInstrument,
+                      " - Choisir le fichier des paramètres")
+  fichier_param <- rchoose.files(caption=laCaption,
                                  default = normalizePath("Fichiers_Parametres"),
                                  multi = FALSE,filters = "*.R")
   source(fichier_param, encoding = "UTF-8", local=TransmitEnv)  

@@ -45,7 +45,7 @@ DoTransmitSpecteuR<-function(Transm_Inst,leplan,tuneParams=FALSE){
   #Permettre la modification des paramètres----
   if (tuneParams){
     edit(file=Transm_Inst$fichier_param)  
-    source(R_Inst$fichier_param)
+    source(Transm_Inst$fichier_param)
     
     # Lire les fichiers d'étalonnage au cas où changement!
     Transm_Inst$gainY=scan(Transm_Inst$Maya_Calib_File,sep="\t",quiet=TRUE)

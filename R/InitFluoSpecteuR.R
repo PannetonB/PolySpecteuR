@@ -57,7 +57,9 @@ InitFluoSpecteuR<-function(){
   
   #*****************************************************************************
   # └ Fichiers paramètres instruments----
-  fichier_param <- rchoose.files(caption="FLUORESCENCE - Choisir le fichier des parametres",
+  laCaption <- paste0("FLUORESCENCE SUR ",FluoEnv$nomInstrument,
+                      " - Choisir le fichier des paramètres")
+  fichier_param <- rchoose.files(caption=laCaption,
                                  default = normalizePath("Fichiers_Parametres"),
                                  multi = FALSE,filters = "*.R")
   source(fichier_param, encoding = "UTF-8", local=FluoEnv)  

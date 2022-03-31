@@ -23,7 +23,9 @@ Clean_n_Close <- function(lesInstr)
                 Close_LS2(1)
              }
              if (sourceLaser=="IPS"){
-               
+                ShutterOff(1)
+                LaserOff(1)
+                Close_IPS()
              }
           }
      )
@@ -32,14 +34,14 @@ Clean_n_Close <- function(lesInstr)
  }
  
  #Fermer la library pour MCDAQ au besoin----
- lesMCDAQ <- which(which(lestypes=="Fluorescence"))
+ lesMCDAQ <- which(lestypes=="Fluorescence")
  if (length(lesMCDAQ)>0) 
-   lesInstr[[lesMCDAQ[1]]]$Quitte_MCLIB()
+   Quitte_MCLIB()
  
 
 #Ferme les spectros----
 OOobj$mywrap$closeAllSpectrometers() 
-rm(OOobj)
+if (exists("OOobj", envir = .GlobalEnv))  rm(OOobj, envir=.GlobalEnv)
 gc()
  
 # END ----  

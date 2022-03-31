@@ -55,8 +55,10 @@ InitReflectSpecteuR<-function(){
   source(fichier_config,encoding = "UTF-8", local=ReflectEnv)
   
   #*****************************************************************************
-  ## Fichiers paramètres instrument s----
-  fichier_param <- rchoose.files(caption="RÉFLECTANCE - Choisir le fichier des parametres",
+  ## Fichiers paramètres instrument s--------
+  laCaption <- paste0("RÉFLECTANCE SUR ",ReflectEnv$nomInstrument,
+                      " - Choisir le fichier des paramètres")
+  fichier_param <- rchoose.files(caption=laCaption,
                                  default = normalizePath("Fichiers_Parametres"),
                                  multi = FALSE,filters = "*.R")
   source(fichier_param, encoding = "UTF-8", local=ReflectEnv)  

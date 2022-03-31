@@ -32,7 +32,9 @@ InitRamanSpecteuR<-function(){
   
   #****************************************************************************
   # Charge les parametres.----
-  fichier_param <- rchoose.files(caption="RAMAN - Choisir le fichier des parametres",
+  laCaption <- paste0("RAMAN SUR ",RamanEnv$nomInstrument,
+                      " - Choisir le fichier des paramètres")
+  fichier_param <- rchoose.files(caption=laCaption,
           default = normalizePath("Fichiers_Parametres"),
           multi = FALSE,filters = "*.R")
   source(fichier_param, encoding = "UTF-8", local=RamanEnv)  
@@ -114,7 +116,8 @@ InitRamanSpecteuR<-function(){
     if (test=="OK"){
       LaserOn(1,RamanEnv$C_Laser)
       cat("\n")
-      dum=readline(paste("Connexion au LS-2 réussie? (O/N):",sep=""))
+      dum <- LaserID()
+      dum=readline(paste0("Connexion au laser IPS ",dum$serialno," réussie? (O/N):",sep=""))
       if (toupper(dum)=="N"){
         Close_IPS()
         WarmSpectro(RamanEnv$lespectro,OOobj$mywrap)

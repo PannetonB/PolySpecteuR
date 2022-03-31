@@ -46,7 +46,7 @@ DoFluoSpecteuR<-function(F_Inst,leplan,tuneParams=FALSE){
   #Permettre la modification des paramètres----
   if (tuneParams){
     edit(file=F_Inst$fichier_param)  
-    source(R_Inst$fichier_param)
+    source(F_Inst$fichier_param)
     
     # Lire les fichiers d'étalonnage au cas où changement!
     F_Inst$gainY=scan(F_Inst$Maya_Calib_File,sep="\t",quiet=TRUE)

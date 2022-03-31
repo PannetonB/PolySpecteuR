@@ -66,7 +66,7 @@ DoRamanSpecteuR <- function(R_Inst,leplan,tuneParams=FALSE)
   })
   
   #Mettre l'echantillon en place
-  utils::winDialog("ok",paste0("RAMAN\nIntroduire l'échantillon ",leplan$EchID,"."))
+  #utils::winDialog("ok",paste0("RAMAN\nIntroduire l'échantillon ",leplan$EchID,"."))
   
   cat("\n*********************\nAcquisition du Raman.\n")
   
@@ -85,14 +85,16 @@ DoRamanSpecteuR <- function(R_Inst,leplan,tuneParams=FALSE)
   
   # └ Boucle sur les répétitions de positions----
   for (k in 1:R_Inst$posReps_Raman){
-    cat(" - Répétition de position ", k,"\n")
+    mess <- paste0("RAMAN\nPlacer l'échantillon ",leplan$EchID, "à la position ", k,".")
+    utils::winDialog("ok",mess)
+    
+    dum <- readline(paste0("Placer l'échantillon à la position ", k,"\n"))
     #  └ └   Prendre un spectre brut ----
     cat("   - Signal brut\n")
     with(R_Inst, {Signal=Grab_f_QE(lespectro,OOobj,T_Raman*1000)})
     
     #Coupe l'alimentation du shutter
     #UNCOMMENT
-    ShutterOff(1)
     # R_Inst$Signal <-  R_Inst$Signal[1:1044]
     #UNCOMMENT
     Sys.sleep(0.3)
@@ -120,6 +122,7 @@ DoRamanSpecteuR <- function(R_Inst,leplan,tuneParams=FALSE)
                      rep=baseline_rep, tol = baseline_tol)
       }
     })
+    
     
     # └ └  Prépare l'output -----
     if (k==1) {
@@ -154,6 +157,10 @@ DoRamanSpecteuR <- function(R_Inst,leplan,tuneParams=FALSE)
                                     baseline::getCorrected(R_Inst$bc))
       }
   }
+  
+  #UNCOMMENT
+  ShutterOff(1)
+  #UNCOMMENT
   
    
   #///////////////////////////////////////////////////////////////

@@ -12,8 +12,8 @@
   les_mcusb=list()
   les_spectro$name="QE-PRO"
   les_spectro$serial="QEP03732"
-  sourceLaser = "LS2"
-  #sourceLaser = "IPS"
+  #sourceLaser = "LS2"
+  sourceLaser = "IPS"
   
  
 

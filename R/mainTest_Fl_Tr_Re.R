@@ -90,7 +90,15 @@ mainTest_Fl_Tr_Re <- function()
     "Entrer un identifiant pour les noms de fichier de données",
     as.character(Sys.Date()))
   dataPath <- utils::choose.dir(default = "",
-                                caption = "Choisir un répertoire pour stocker les données.")
+          caption = "Choisir un répertoire pour stocker les données.")
+  
+  #********************************************************
+  ## Permettre la modif des paramètres d'acquisition à chaque échantillon ----
+  #********************************************************
+  tuneParams <- FALSE
+  yesno <- utils::winDialog("yesno",
+        "Permettre la modification des paramètres à chaque échantillon.")
+  if (yesno=="YES") tuneParams <- TRUE
   
   #********************************************************
   #Phase d'acquisition de données ----
@@ -106,28 +114,28 @@ mainTest_Fl_Tr_Re <- function()
         k <- k+1
         if (t=="Raman"){
           if (isValid) {
-            DoRamanSpecteuR(lesInstruments[[k]],Plan)
+            DoRamanSpecteuR(lesInstruments[[k]],Plan, tuneParams)
             dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
             isValid <- (dum=="OK") & isValid
           }
         }
         if (t=="Fluorescence"){
           if (isValid){
-             DoFluoSpecteuR(lesInstruments[[k]], Plan)
+             DoFluoSpecteuR(lesInstruments[[k]], Plan, tuneParams)
              dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
              isValid <- (dum=="OK") & isValid
           }
         }
         if (t=="Reflectance"){
           if (isValid){
-            DoReflectSpecteuR(lesInstruments[[k]], Plan)
+            DoReflectSpecteuR(lesInstruments[[k]], Plan, tuneParams)
             dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
             isValid <- (dum=="OK") & isValid
           }
         }
         if (t=="Transmittance"){
           if (isValid){
-            DoTransmitSpecteuR(lesInstruments[[k]], Plan)
+            DoTransmitSpecteuR(lesInstruments[[k]], Plan, tuneParams)
             dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
             isValid <- (dum=="OK") & isValid
           }
@@ -138,11 +146,28 @@ mainTest_Fl_Tr_Re <- function()
       if (isValid){      
          writeYFile(Plan, dataPath,dataSetID)
          writeData(Plan,lesInstruments,dataPath,dataSetID) 
+      }else
+        #Enlève la dernière entrée si plan manuel.  
+      {
+        if (Plan$leType == "Manuel"){
+          nRowPlan <- nrow(Plan$leplan)
+          if (nRowPlan==1){
+            Plan$leplan <- data.frame()
+            Plan$selected <- 0
+            Plan$EchID <- ""
+          }else
+          {
+            Plan$leplan <- Plan$leplan[-nRowPlan,]
+            Plan$selected <- nRowPlan-1
+            Plan$EchID <- Plan$leplan[Plan$selected,1]
+          }
+        }
       }
     }  
     
     ### Option de continuer ou quitter ----
-    sel <- select.list(c("Oui","Non"), preselect = "Oui", title="CONTINUER?",graphics = T)
+    sel <- select.list(c("Oui","Non"), preselect = "Oui", 
+          title="CONTINUER?",graphics = T)
     goOn <- ifelse(sel=="Oui",TRUE,FALSE)
   }        #Fin de la boucle sur les échantillons
   
@@ -150,5 +175,5 @@ mainTest_Fl_Tr_Re <- function()
   #Nettoyage et arrêt du script ----
   #********************************************************
   setwd(RPath)
-  Clean_n_Close(lesInstruments)
+  Clean_n_Close(list(lesInstruments))
 }

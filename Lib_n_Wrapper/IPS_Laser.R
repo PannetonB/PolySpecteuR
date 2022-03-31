@@ -60,20 +60,20 @@ LaserID <- function(){
 
 #SetLaserCurrent-------
 SetLaserCurrent <- function(current){
+#Règle le courant. Pour lire le courant il faut que le laser soit à ON,
+#c'est-à-dire ShutterOn(1)  
   write.serialConnection(con,
                          paste0("LASER:CUR  ",as.character(current)))
 }
 
 # GetLaserCurrent-------
+#Lit le courant consommé. Si ShutterOn, courant alimentant le laser,
+#si ShutterOff, courant de base.
 GetLaserCurrent <- function(){
   write.serialConnection(con,
                          "LASER:CUR?")
   while(nBytesInQueue(con)[1]==0) Sys.sleep(0.1)
   lecur <- read.serialConnection(con)
-  if (as.numeric(lecur)!=current){
-    utils::winDialog(type="ok",
-                     message="Échec en ajustant le courant du laser.")
-  }
   return(as.numeric(lecur))
 }
 
@@ -81,22 +81,12 @@ GetLaserCurrent <- function(){
 LaserOn <- function(LasNum,laserCur){
 #Paramètre LasNum pas utilisé. Pour compatibilité avec Newport_LS_2.R
   SetLaserCurrent(laserCur)
-  dum <- GetLaserCurrent()
-  if (dum!=laserCur){
-    utils::winDialog(type="ok",
-                     message="Échec en ajustant le courant du laser.")
-  }
 }
 
 #LaserOff ------
 LaserOff <- function(lasNum){
 #Paramètre LasNum pas utilisé. Pour compatibilité avec Newport_LS_2.R
   SetLaserCurrent(0)
-  dum <- GetLaserCurrent()
-  if (dum!=laserCur){
-    utils::winDialog(type="ok",
-                     message="Échec en ajustant le courant du laser à 0.")
-  }
 }
 
 #ShutterOn--------
@@ -109,6 +99,14 @@ ShutterOn<-function(LasNum){
 ShutterOff<-function(LasNum){
   #Paramètre LasNum pas utilisé. Pour compatibilité avec Newport_LS_2.R
   write.serialConnection(con,"LASER:EN OFF")
+}
+
+#GetLaserPower-----
+GetLaserPower <- function(){
+  write.serialConnection(con,'LASER:POW?')
+  while(nBytesInQueue(con)[1]==0) Sys.sleep(0.1)
+  lepow <- read.serialConnection(con)
+  return(as.numeric(lepow))
 }
 
 

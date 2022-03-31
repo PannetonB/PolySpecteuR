@@ -1,6 +1,14 @@
   #************************************************************************************
   # P A R A M È T R E S    F L U O
   #///////////////////////////////////////////////////////////////////////////////////
+
+
+
+#*
+#*********************************************************************
+# P A R A M Ê T R E S    P O U V A N T    Ê T R E    É D I T É S 
+# E N    C O U R S     D E     S E S S I O N     D' A C Q U I S I T I O N.
+#*********************************************************************
   # Nombre de répértitions en changeant la position de l'échantillon
   posReps_Fluo=1
   
@@ -19,7 +27,7 @@
   
   # Position 1 (identifié zéro dans l'appareil)
   DoEX1=TRUE    # TRUE - on prend la fluo à cette longueur d'onde d'excitation
-  EX1=280       # Longueur d'onde de la DEL
+  EX1=300       # Longueur d'onde de la DEL
   T_EX1=100     # temps d'exposition en msec
   Box_EX1=1     # Boxcar pour l'acquisition
   Scans_EX1=5   # nombre de scans par acquisition
@@ -36,7 +44,7 @@
   STD_EX2="STA6"  # standard de normalisation associé
   
   # Position 3
-  DoEX3=TRUE    # TRUE - on prend la fluo à cette longueur d'onde d'excitation
+  DoEX3=FALSE    # TRUE - on prend la fluo à cette longueur d'onde d'excitation
   EX3=340       # Longueur d'onde de la DEL
   T_EX3=100      # temps d'exposition en msec
   Box_EX3=1     # Boxcar pour l'acquisition
@@ -46,7 +54,7 @@
   
   # Position 4
   DoEX4=TRUE    # TRUE - on prend la fluo à cette longueur d'onde d'excitation
-  EX4=355       # Longueur d'onde de la DEL
+  EX4=360       # Longueur d'onde de la DEL
   T_EX4=100     # temps d'exposition en msec
   Box_EX4=1     # Boxcar pour l'acquisition
   Scans_EX4=5   # nombre de scans par acquisition
@@ -63,7 +71,7 @@
   STD_EX5="STA6"  # standard de normalisation associé
   
   # Position 6
-  DoEX6=TRUE  #TRUE - on prend la fluo à cette longueur d'onde d'excitation
+  DoEX6=FALSE  #TRUE - on prend la fluo à cette longueur d'onde d'excitation
   EX6=400       # Longueur d'onde de la DEL
   T_EX6=25      # temps d'exposition en msec
   Box_EX6=1     # Boxcar pour l'acquisition
@@ -81,14 +89,21 @@
   STD_EX7="STA6"  # standard de normalisation associé
   
   
+  # T E M P S   D E   S T A B I L I S A T I O N
+  T_DEL=0.8   #secondes
+  
+  
+  
+  #*********************************************************************
+  # P A R A M Ê T R E S   N O N     M O D I F I A B L E S
+  # E N    C O U R S     D E     S E S S I O N     D' A C Q U I S I T I O N.
+  #*********************************************************************
   # Plage et intervalle de longueur d'onde pour l'interpolation
   fluo_l_min=240  #longueur d'onde minimale
   fluo_l_max=800  #longueur d'onde maximale
   fluo_step=1     #pas de longueur d'onde.
   
   
-  # T E M P S   D E   S T A B I L I S A T I O N
-  T_DEL=0.8   #secondes
   
   
 

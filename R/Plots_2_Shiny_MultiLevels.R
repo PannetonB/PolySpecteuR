@@ -49,6 +49,7 @@ Plots_2_Shiny_MultiLevels <- function(Inst)
 {
     library(shiny)
     library(miniUI)
+    library(keys)
     
     #Stocke les paramètres graphiques par défaut.
     op <- par(no.readonly = TRUE)
@@ -94,7 +95,8 @@ Plots_2_Shiny_MultiLevels <- function(Inst)
     
     #Interface Shiny----
     ui <- miniPage(
-      
+      useKeys(),
+      keysInput("keys", "enter"),
       gadgetTitleBar(paste0(leType, " - ",as.character(repN)," répétition(s)."), 
                      left = miniTitleBarCancelButton("cancel","Rejeter"),
                      right = miniTitleBarButton("done", "Accepter", primary = TRUE)),
@@ -210,6 +212,9 @@ Plots_2_Shiny_MultiLevels <- function(Inst)
       
       
       # └ Message de sortie----
+      observeEvent(input$keys,{
+        stopApp("OK")
+      })
       observeEvent(input$done,{
         stopApp("OK")
       })

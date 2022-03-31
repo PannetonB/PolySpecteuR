@@ -39,32 +39,20 @@ writeData <- function(Plan,lesInstruments,dataPath,dataSetID)
   if (!dir.exists(file.path(dataPath,"Brutes")))
       dir.create(file.path(dataPath,"Brutes"))
   
-  # Récupère des infos sur le contenu de l'élément Spectres des instruments
-  
-  # dataTypes <- lapply(lesInstruments, function(Inst){ 
-  #   names(Inst$Spectres)
-  # })
-  #dataTypes <- toupper(unlist(dataTypes))
-  
-  # listDepth <- lapply(lesInstruments, function(Inst){
-  #   depth(Inst$Spectres)
-  # })
-  
+ 
+  #Inclure la profondeur de liste dans lesInstruments
   dum <- lapply(1:length(lesInstruments), function(i){
     lesInstruments[[i]]$listDepth <- depth(lesInstruments[[i]]$Spectres)
   })
   
-  # instTypes <- lapply(lesInstruments, function(Inst){
-  #   Inst$type
-  # })
-  # instTypes <- toupper(unlist(instTypes))
-      
-  # Stocke les données brutes----
-  # if (listDepth==1){
+ 
   dum <- lapply(lesInstruments, function(Inst){
     if (Inst$listDepth==1){
       fname <- file.path(dataPath,"Brutes",
-                         paste0(substr(Inst$type,1,5),"_",
+                         paste0(substr(Inst$type,1,5),
+                                "-",
+                                Inst$nomInstrument,
+                                "_",
                                 dataSetID,".txt")
       )
       
@@ -73,6 +61,7 @@ writeData <- function(Plan,lesInstruments,dataPath,dataSetID)
       
       dataMat <- Inst$Spectres[[lesBrutes]]
       xdata <- dataMat[1,]
+      #Faire la moyenne si plus d'une position d'échantillon
       if (nrow(dataMat)==2){
         sp <- dataMat[-1,]
       }else
@@ -112,11 +101,15 @@ writeData <- function(Plan,lesInstruments,dataPath,dataSetID)
       lesNoms <- names(dataMat)
       for (k in 1:length(dataMat)){
         fname <- file.path(dataPath,"Brutes",
-                           paste0(lesNoms[k],"_",
+                           paste0(lesNoms[k],
+                                  "-",
+                                  Inst$nomInstrument,
+                                  "_",
                                   dataSetID,".txt")
         )
         
         xdata <- dataMat[[k]][1,]
+        #Faire la moyenne si plus d'une position d'échantillon
         if (nrow(dataMat[[k]]==2)){
           sp <- dataMat[[k]][-1,]
         }else
@@ -147,13 +140,7 @@ writeData <- function(Plan,lesInstruments,dataPath,dataSetID)
   
   
   # Stocke les données interpolées ou corrigées----
-  # if (any(stringr::str_detect(toupper(dataTypes),"ORRIG"))){
-  #   letype <- which(stringr::str_detect(toupper(dataTypes),"ORRIG"))
-  # }else
-  # {
-  #   letype <- which(stringr::str_detect(toupper(dataTypes),"ERPOL"))
-  # }
-  # if (listDepth==1){
+ 
   dum <- lapply(lesInstruments, function(Inst){
     if (Inst$listDepth==1){
       DTypes <- names(Inst$Spectres)
@@ -165,12 +152,17 @@ writeData <- function(Plan,lesInstruments,dataPath,dataSetID)
       }
       
       fname <- file.path(dataPath,
-                         paste0(substr(Inst$type,1,5),"_",
+                         paste0(substr(Inst$type,1,5),
+                                "-",
+                                Inst$nomInstrument,
+                                "_",
                                 dataSetID,".txt")
       )
       
       dataMat <- Inst$Spectres[[letype]]
       xdata <- dataMat[1,]
+      
+      #Faire la moyenne si plus d'une position d'échantillon
       if (nrow(dataMat)==2){
         sp <- dataMat[-1,]
       }else
@@ -213,11 +205,16 @@ writeData <- function(Plan,lesInstruments,dataPath,dataSetID)
       lesNoms <- names(dataMat)
       for (k in 1:length(dataMat)){
         fname <- file.path(dataPath,
-                           paste0(lesNoms[k],"_",
+                           paste0(lesNoms[k],
+                                  "-",
+                                  Inst$nomInstrument,
+                                  "_",
                                   dataSetID,".txt")
         )
         
         xdata <- dataMat[[k]][1,]
+        
+        #Faire la moyenne si plus d'une position d'échantillon
         if (nrow(dataMat[[k]]==1)){
           sp <- dataMat[[k]][-1,]
         }else
