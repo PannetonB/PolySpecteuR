@@ -86,10 +86,24 @@ Plots_2_Shiny_MultiLevels <- function(Inst)
       topN <- length(topLevelNames)
     }
     
-    # Paramètres pour graphiques----
-    plotYRanges <- lapply(Sps,function(s) lapply(s,function(s2) range(s2[-1,])))
     repN <- nrow(Sps[[1]][[1]])-1
     secN <- length(secondLevelNames)
+    
+    # Paramètres pour graphiques----
+    plotXRanges <- lapply(Sps,function(s) lapply(s,function(s2) range(s2[1,])))
+    plotYRanges <- lapply(Sps,function(s) lapply(s,function(s2) range(s2[-1,])))
+    #Cas spécial pour la fluorescence pour enlever le Rayleigh
+    if (leType=="Fluorescence"){
+      for (secondNames in secondLevelNames){
+        #Ajoute 25 nm au plus bas pour enlever Rayleigh
+        lambdaEx <- as.numeric(substring(secondNames,3))
+        for (k in 1:topN){
+          plotXRanges[[k]][[secondNames]][1] <- lambdaEx+25
+        }
+      }
+     
+    }
+    
     plotRows <- ceiling(secN/3)
     plotColumns <- ifelse(secN==1,1,3)
     
@@ -138,11 +152,21 @@ Plots_2_Shiny_MultiLevels <- function(Inst)
         {
           i=1
         }
+        
         par(mfrow=c(plotRows,plotColumns))
+        
         for (j in 1:secN){                              #indice de niveau 2
+          #Cas spécial pour la fluorescence pour enlever le Rayleigh
+          if (leType=="Fluorescence"){
+            
+          }else
+          {
+            xlimits <- range(Sps[[i]][[j]][1,])
+          }
           if (repN==1){
             plot(Sps[[i]][[j]][1,],Sps[[i]][[j]][2,], 
                  type="l",col=2, lwd=2,
+                 xlim = plotXRanges[[i]][[j]],
                  ylim = plotYRanges[[i]][[j]],
                  ylab= Inst$type,
                  xlab= Inst$lespectro$xunit,
@@ -151,6 +175,7 @@ Plots_2_Shiny_MultiLevels <- function(Inst)
           {
             plot(Sps[[i]][[j]][1,],Sps[[i]][[j]][2,], 
                  type="l",col=2,lty=2,
+                 xlim = plotXRanges[[i]][[j]],
                  ylim = plotYRanges[[i]][[j]],
                  ylab= Inst$type,
                  xlab= Inst$lespectro$xunit,
@@ -180,6 +205,7 @@ Plots_2_Shiny_MultiLevels <- function(Inst)
               if (repN==1){
                 plot(Sps[[i]][[j]][1,],Sps[[i]][[j]][2,], 
                      type="l",col=2, lwd=2,
+                     xlim = plotXRanges[[i]][[j]],
                      ylim = plotYRanges[[i]][[j]],
                      ylab= Inst$type,
                      xlab= Inst$lespectro$xunit,
@@ -188,6 +214,7 @@ Plots_2_Shiny_MultiLevels <- function(Inst)
               {
                 plot(Sps[[i]][[j]][1,],Sps[[i]][[j]][2,], 
                      type="l",col=2,lty=2,
+                     xlim = plotXRanges[[i]][[j]],
                      ylim = plotYRanges[[i]][[j]],
                      ylab= Inst$type,
                      xlab= Inst$lespectro$xunit,

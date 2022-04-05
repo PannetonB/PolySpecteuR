@@ -172,39 +172,34 @@ DoFluoSpecteuR<-function(F_Inst,leplan,tuneParams=FALSE){
         # grid()
        
        
-      }else
-      {
-        # plot(c(0,1),c(0,1), type="n", axes=F, xlab="", ylab="")    #Pour passer au graphique suivant
-        # text(0.5,0.5,paste("Pas de fluo. à ",
-        #                    as.character(F_Inst$lesEXs[k]), sep=""))
-      }
       
-      # └└   Prépare la liste de sortie----
-      if (krep==1) {
-        nomEX <- paste0("EX",as.character(F_Inst$lesEXs[k]))
-        outerList[['Brut']][[nomEX]] <- 
-                    matrix(F_Inst$lespectro$xaxis,
-                           nrow=2,ncol=length(F_Inst$lespectro$xaxis),
-                           byrow=T)
-        outerList[['Brut']][[nomEX]][2,] <- 
-                    F_Inst$lespectro$sp
-        
-        outerList[['Corrigé']][[nomEX]] <- 
-                    matrix(F_Inst$lespectro$int$x,
-                           nrow=2,
-                           ncol=length( F_Inst$lespectro$int$x),
-                           byrow=T)
-        outerList[['Corrigé']][[nomEX]][2,] <-  
-                    F_Inst$lespectro$int$y
-      }else
-      {
-        outerList[['Brut']][[nomEX]] <- 
-                 rbind(outerList[['Brut']][[nomEX]],
-                       F_Inst$lespectro$sp)
-        outerList[['Corrigé']][[nomEX]] <- 
-          rbind(outerList[['Corrigé']][[nomEX]],
-                F_Inst$lespectro$int$y)
-        
+        # └└   Prépare la liste de sortie----
+        if (krep==1) {
+          nomEX <- paste0("EX",as.character(F_Inst$lesEXs[k]))
+          outerList[['Brut']][[nomEX]] <- 
+                      matrix(F_Inst$lespectro$xaxis,
+                             nrow=2,ncol=length(F_Inst$lespectro$xaxis),
+                             byrow=T)
+          outerList[['Brut']][[nomEX]][2,] <- 
+                      F_Inst$lespectro$sp
+          
+          outerList[['Corrigé']][[nomEX]] <- 
+                      matrix(F_Inst$lespectro$int$x,
+                             nrow=2,
+                             ncol=length( F_Inst$lespectro$int$x),
+                             byrow=T)
+          outerList[['Corrigé']][[nomEX]][2,] <-  
+                      F_Inst$lespectro$int$y
+        }else
+        {
+          outerList[['Brut']][[nomEX]] <- 
+                   rbind(outerList[['Brut']][[nomEX]],
+                         F_Inst$lespectro$sp)
+          outerList[['Corrigé']][[nomEX]] <- 
+            rbind(outerList[['Corrigé']][[nomEX]],
+                  F_Inst$lespectro$int$y)
+          
+        }
       }
     }  #Fin de boucle sur les EXs
    
