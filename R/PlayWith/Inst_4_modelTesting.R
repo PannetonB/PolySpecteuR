@@ -16,11 +16,11 @@ library(here)
 setwd(here())
 op <<- par(no.readonly = TRUE)   
 logo <<- png::readPNG("PolySpecteuR_Logo.png")
+load(file.path(here(),"TestData","Rance_Huiles","InSpectoRData_4_models.RData"))
 
 #Fluorescence 1
 source(file.path(here(),"R/PlayWith/InitFluoSpecteuR_noMCDAQ.R"), encoding = 'UTF-8', echo=TRUE)
 F_Inst <- InitFluoSpecteuR()
-load(file.path(here(),"TestData","Rance_Huiles","InSpectoRData_4_models.RData"))
 
 Fluo_EX <- get_DELs_dat("DoEX", mon_envir = F_Inst)
 

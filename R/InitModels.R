@@ -115,9 +115,27 @@ InitModels<-function(lesInstruments){
       list(instType=instType,instDataType=instDataType[Fluo_EX])
     }else
     {
-      list(instType,substr(instType,1,5))
+      list(instType=instType,instDataType=substr(instType,1,5))
     }
   })
+  
+  
+  #Note - dataSource est une matrice indiquant où trouver les données nécessaires
+  #pour applique unModele. C'est une matrice où chaque ligne représente un des 
+  #instruments et où chaque colonne est associée à un type de données nécessaire
+  # au modèle. Il faut qu'il y ait au moins un TRUE dans chaque colonne sinon
+  # le modèle ne peut pas s'appliquer. Si plusieurs lignes sont identiques, il
+  # y a la possibilité d'applique unModele plusieurs fois. On doit créer une telle
+  # matrice pour tous les modèles.
+  requiredTypes_4_Model <- unModele$model_descript$datatype
+  availableTypes_per_inst <- lapply(instDataType,function(idt) idt$instDataType)
+  dum <-(lapply(availableTypes_per_inst, stringr::str_detect, pattern=requiredTypes_4_Model))
+  dataSource <- matrix(unlist(dum),nrow=length(lesInstruments))
+  lesnoms <- lapply(lesInstruments, function(I) I$nomInstrument)
+  rownames(dataSource) <- unlist(lesnoms)
+  colnames(dataSource) <- requiredTypes_4_Model
+  canApplyModel <- apply(dataSource,1,all)
+  #Besoin de trouver un moyen d'identifier les lignes identiques dans dataSource
   
   hasData <- TRUE
   for (unModele in modelEnv){
