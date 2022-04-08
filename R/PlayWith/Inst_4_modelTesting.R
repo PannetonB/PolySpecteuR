@@ -21,7 +21,7 @@ load(file.path(here(),"TestData","Rance_Huiles","InSpectoRData_4_models.RData"))
 #Fluorescence 1
 source(file.path(here(),"R/PlayWith/InitFluoSpecteuR_noMCDAQ.R"), encoding = 'UTF-8', echo=TRUE)
 F_Inst <- InitFluoSpecteuR()
-
+F_Inst$nomInstrument <- "Fluo1"
 Fluo_EX <- get_DELs_dat("DoEX", mon_envir = F_Inst)
 
 
@@ -68,7 +68,8 @@ Plots_2_Shiny_MultiLevels(F_Inst)
 
 
 #Fluorescence 2
-F_Inst2 <- F_Inst
+F_Inst2 <- rlang::env_clone(F_Inst, parent = parent.env(F_Inst))
+F_Inst2$nomInstrument <- "Fluo2"
 
 outerList <- list()
 
@@ -114,6 +115,8 @@ Plots_2_Shiny_MultiLevels(F_Inst2)
 #Raman 1
 source(file.path(here(),"R/PlayWith/InitRamanSpecteuR_noLaser.R"), encoding = 'UTF-8', echo=TRUE)
 R_Inst <- InitRamanSpecteuR()
+
+R_Inst$nomInstrument <- "Raman1"
 
 outlist <- list()   #liste vide pour les matrices de spectre en sortie 
 

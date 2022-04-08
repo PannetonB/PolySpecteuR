@@ -119,38 +119,56 @@ InitModels<-function(lesInstruments){
     }
   })
   
-  
-  #Note - dataSource est une matrice indiquant où trouver les données nécessaires
-  #pour applique unModele. C'est une matrice où chaque ligne représente un des 
-  #instruments et où chaque colonne est associée à un type de données nécessaire
-  # au modèle. Il faut qu'il y ait au moins un TRUE dans chaque colonne sinon
-  # le modèle ne peut pas s'appliquer. Si plusieurs lignes sont identiques, il
-  # y a la possibilité d'applique unModele plusieurs fois. On doit créer une telle
-  # matrice pour tous les modèles.
-  requiredTypes_4_Model <- unModele$model_descript$datatype
-  availableTypes_per_inst <- lapply(instDataType,function(idt) idt$instDataType)
-  dum <-(lapply(availableTypes_per_inst, stringr::str_detect, pattern=requiredTypes_4_Model))
-  dataSource <- matrix(unlist(dum),nrow=length(lesInstruments))
-  lesnoms <- lapply(lesInstruments, function(I) I$nomInstrument)
-  rownames(dataSource) <- unlist(lesnoms)
-  colnames(dataSource) <- requiredTypes_4_Model
-  canApplyModel <- apply(dataSource,1,all)
-  #Besoin de trouver un moyen d'identifier les lignes identiques dans dataSource
-  
-  hasData <- TRUE
-  for (unModele in modelEnv){
-    unModele$instruments <- character()
-    modDataType <- unModele$model_descript$datatype
-    for (mod in modDataType){
-      anyHasData <- FALSE
-      for (inst in instDataType){
-        anyHasData <- anyHasData | any(mod==inst$instDataType)
-        if (hasData)
-          unModele$instruments <- c(unModele$instruments,inst$instType)
+  lapply(modelEnv, function(unModele)
+  {
+    #Note - dataSource est une matrice indiquant où trouver les données nécessaires
+    #pour applique unModele. C'est une matrice où chaque ligne représente un des 
+    #instruments et où chaque colonne est associée à un type de données nécessaire
+    # au modèle. Il faut qu'il y ait au moins un TRUE dans chaque colonne sinon
+    # le modèle ne peut pas s'appliquer. Si plusieurs lignes sont identiques, il
+    # y a la possibilité d'applique unModele plusieurs fois. On doit créer une telle
+    # matrice pour tous les modèles.
+    requiredTypes_4_Model <- unModele$model_descript$datatype
+    availableTypes_per_inst <- lapply(instDataType,function(idt) idt$instDataType)
+    dum <-(lapply(availableTypes_per_inst, stringr::str_detect, pattern=requiredTypes_4_Model))
+    dataSource <- matrix(unlist(dum),nrow=length(lesInstruments))
+    lesnoms <- lapply(lesInstruments, function(I) I$nomInstrument)
+    rownames(dataSource) <- unlist(lesnoms)
+    colnames(dataSource) <- requiredTypes_4_Model
+    canApplyModel <- all(colSums(dataSource)>0)
+    nInstruments <- length(lesInstruments)
+    #Calcul des indices pour combiner instruments. Une liste de longueur égale
+    #au nombre d'instruments. Le premier élément est pour un instrument simple,
+    #le 2ième pour toutes les combinaisons de 2 intruments et ...
+    indCom <-  sapply(1:nInstruments,FUN=function(i) combn(1:nInstruments,i))
+    #Utiliser indCom pour sélectionner des sous-ensembles de dataSource pour
+    #déterminer les combinaisons d'instruments acceptables pour le modèle.
+    #instCombi indique (TRUE/FALSE) les combinaisons dans indCom pouvant être
+    #utilisée pour appliquer le modèle
+    instCombi <- lapply(1:nInstruments, function(indi){
+      dum <- as.matrix(indCom[[indi]], nrow=indi)
+      nCombi <- ncol(dum)
+      ddd <- logical(length=nCombi)
+      for (k in 1:nCombi){
+        dd <- colSums(matrix(dataSource[dum[,k],],nrow=indi,byrow=F))==1
+        ddd[k] <- all(dd)
       }
-      hasData <- hasData & anyHasData
+      return(ddd)
+    })
+    
+    #workingCombi donne une liste de listes d'instruments permettant d'appliquer
+    #le modèle.
+    nWorkingCombi <- sum(unlist(instCombi))
+    workingCombi <- list()
+    for (ii in 1:length(instCombi)){
+      for (k in 1:length(instCombi[[ii]])){
+        dum <- instCombi[[ii]][k]
+        if (dum) workingCombi <- c(workingCombi,list(unlist(lesnoms)[indCom[[ii]][,k]]))
+      }
     }
-  }
+    return(workingCombi)
+  })
+  
   
   #*****************************************************************************
   #get_DELs_dat-----------------------------------------

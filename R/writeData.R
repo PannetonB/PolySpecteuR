@@ -50,7 +50,7 @@ writeData <- function(Plan,lesInstruments,dataPath,dataSetID)
     if (Inst$listDepth==1){
       fname <- file.path(dataPath,"Brutes",
                          paste0(substr(Inst$type,1,5),
-                                "-",
+                                "w",
                                 Inst$nomInstrument,
                                 "_",
                                 dataSetID,".txt")
@@ -102,7 +102,7 @@ writeData <- function(Plan,lesInstruments,dataPath,dataSetID)
       for (k in 1:length(dataMat)){
         fname <- file.path(dataPath,"Brutes",
                            paste0(lesNoms[k],
-                                  "-",
+                                  "w",
                                   Inst$nomInstrument,
                                   "_",
                                   dataSetID,".txt")
@@ -153,7 +153,7 @@ writeData <- function(Plan,lesInstruments,dataPath,dataSetID)
       
       fname <- file.path(dataPath,
                          paste0(substr(Inst$type,1,5),
-                                "-",
+                                "w",
                                 Inst$nomInstrument,
                                 "_",
                                 dataSetID,".txt")
@@ -206,7 +206,7 @@ writeData <- function(Plan,lesInstruments,dataPath,dataSetID)
       for (k in 1:length(dataMat)){
         fname <- file.path(dataPath,
                            paste0(lesNoms[k],
-                                  "-",
+                                  "w",
                                   Inst$nomInstrument,
                                   "_",
                                   dataSetID,".txt")
