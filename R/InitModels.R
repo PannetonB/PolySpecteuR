@@ -14,9 +14,22 @@ InitModels<-function(lesInstruments){
   # ENTRÉE
   #    lesInstruments : la liste des environnements des différents instruments
   #                     créée dans un script mainXXXX.R (e.g. mainRaman.R). 
+  # SORTIE
+  #         modelEnv :  une liste dont chaque élément est un environnement 
+  #                     contenant un modèle sauvé par InSpectoR. Dans chacun
+  #                     des environnements, on a ajouté workingInstCombi
+  #                     qui est une liste dont chaque élément liste une
+  #                     d'instruments permettant d'appliquer le modèle. Si
+  #                     cette liste est remplacée par "NON", cela indique
+  #                     qu'il n'est pas possible d'évaluer le modèle avec 
+  #                     la sélection d'instruments. Le programme appelant
+  #                     peut utiliser:
+  #                     any(unlist(workingInstCombi)=="NON")
+  #                     qui est TRUE si un des modèles ne peut pas être utilisé.
+  #                     
   #*****************************************************************************
   # AUTEUR: Bernard Panneton, Agriculture et Agroalimentaire Canada
-  # Février 2022
+  # Avril 2022
   #*****************************************************************************
   #*****************************************************************************
   # Charge des librairies additionnelles----
@@ -119,7 +132,7 @@ InitModels<-function(lesInstruments){
     }
   })
   
-  lapply(modelEnv, function(unModele)
+  workingInstCombi <- lapply(modelEnv, function(unModele)
   {
     #Note - dataSource est une matrice indiquant où trouver les données nécessaires
     #pour applique unModele. C'est une matrice où chaque ligne représente un des 
@@ -131,44 +144,56 @@ InitModels<-function(lesInstruments){
     requiredTypes_4_Model <- unModele$model_descript$datatype
     availableTypes_per_inst <- lapply(instDataType,function(idt) idt$instDataType)
     dum <-(lapply(availableTypes_per_inst, stringr::str_detect, pattern=requiredTypes_4_Model))
-    dataSource <- matrix(unlist(dum),nrow=length(lesInstruments))
+    dataSource <- matrix(unlist(dum),nrow=length(lesInstruments),byrow=T)
     lesnoms <- lapply(lesInstruments, function(I) I$nomInstrument)
     rownames(dataSource) <- unlist(lesnoms)
     colnames(dataSource) <- requiredTypes_4_Model
+    #Retire rangée (instrument) avec seulement des FALSE
+    dataSource <- dataSource[rowSums(dataSource)!=0,]
     canApplyModel <- all(colSums(dataSource)>0)
-    nInstruments <- length(lesInstruments)
-    #Calcul des indices pour combiner instruments. Une liste de longueur égale
-    #au nombre d'instruments. Le premier élément est pour un instrument simple,
-    #le 2ième pour toutes les combinaisons de 2 intruments et ...
-    indCom <-  sapply(1:nInstruments,FUN=function(i) combn(1:nInstruments,i))
-    #Utiliser indCom pour sélectionner des sous-ensembles de dataSource pour
-    #déterminer les combinaisons d'instruments acceptables pour le modèle.
-    #instCombi indique (TRUE/FALSE) les combinaisons dans indCom pouvant être
-    #utilisée pour appliquer le modèle
-    instCombi <- lapply(1:nInstruments, function(indi){
-      dum <- as.matrix(indCom[[indi]], nrow=indi)
-      nCombi <- ncol(dum)
-      ddd <- logical(length=nCombi)
-      for (k in 1:nCombi){
-        dd <- colSums(matrix(dataSource[dum[,k],],nrow=indi,byrow=F))==1
-        ddd[k] <- all(dd)
+    if (canApplyModel){
+      nInstruments <- nrow(dataSource)
+      #Calcul des indices pour combiner instruments. Une liste de longueur égale
+      #au nombre d'instruments. Le premier élément est pour un instrument simple,
+      #le 2ième pour toutes les combinaisons de 2 intruments et ...
+      indCom <-  lapply(1:nInstruments,FUN=function(i) combn(1:nInstruments,i))
+      #Utiliser indCom pour sélectionner des sous-ensembles de dataSource pour
+      #déterminer les combinaisons d'instruments acceptables pour le modèle.
+      #instCombi indique (TRUE/FALSE) les combinaisons dans indCom pouvant être
+      #utilisée pour appliquer le modèle
+      instCombi <- lapply(1:nInstruments, function(indi){
+        dum <- as.matrix(indCom[[indi]], nrow=indi)
+        nCombi <- ncol(dum)
+        ddd <- logical(length=nCombi)
+        for (k in 1:nCombi){
+          dd <- colSums(matrix(dataSource[dum[,k],],nrow=indi,byrow=F))==1
+          ddd[k] <- all(dd)
+        }
+        return(ddd)
+      })
+      
+      #workingCombi donne une liste de listes d'instruments permettant d'appliquer
+      #le modèle.
+      nWorkingCombi <- sum(unlist(instCombi))
+      workingCombi <- list()
+      for (ii in 1:length(instCombi)){
+        for (k in 1:length(instCombi[[ii]])){
+          dum <- instCombi[[ii]][k]
+          if (dum) workingCombi <- c(workingCombi,list(unlist(lesnoms)[indCom[[ii]][,k]]))
+        }
       }
-      return(ddd)
-    })
-    
-    #workingCombi donne une liste de listes d'instruments permettant d'appliquer
-    #le modèle.
-    nWorkingCombi <- sum(unlist(instCombi))
-    workingCombi <- list()
-    for (ii in 1:length(instCombi)){
-      for (k in 1:length(instCombi[[ii]])){
-        dum <- instCombi[[ii]][k]
-        if (dum) workingCombi <- c(workingCombi,list(unlist(lesnoms)[indCom[[ii]][,k]]))
-      }
+      return(workingCombi)
+    }else
+    {
+      return("NON")
     }
-    return(workingCombi)
   })
   
+  for (i in 1:length(workingInstCombi)){
+    modelEnv[[i]]$workingInstCombi <- workingInstCombi[[i]]
+  }
+  
+  return(workingInstCombi)
   
   #*****************************************************************************
   #get_DELs_dat-----------------------------------------
