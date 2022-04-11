@@ -143,8 +143,11 @@ InitModels<-function(lesInstruments){
     # matrice pour tous les modèles.
     requiredTypes_4_Model <- unModele$model_descript$datatype
     availableTypes_per_inst <- lapply(instDataType,function(idt) idt$instDataType)
-    dum <-(lapply(availableTypes_per_inst, stringr::str_detect, pattern=requiredTypes_4_Model))
-    dataSource <- matrix(unlist(dum),nrow=length(lesInstruments),byrow=T)
+    dum2 <- lapply(availableTypes_per_inst, function(ATI){
+      PATI <- stringr::str_c(ATI,collapse = "|")
+      stringr::str_detect(requiredTypes_4_Model,PATI)
+    })
+    dataSource <- matrix(unlist(dum2),nrow=length(lesInstruments),byrow=T)
     lesnoms <- lapply(lesInstruments, function(I) I$nomInstrument)
     rownames(dataSource) <- unlist(lesnoms)
     colnames(dataSource) <- requiredTypes_4_Model
@@ -193,7 +196,7 @@ InitModels<-function(lesInstruments){
     modelEnv[[i]]$workingInstCombi <- workingInstCombi[[i]]
   }
   
-  return(workingInstCombi)
+  return(modelEnv)
   
   #*****************************************************************************
   #get_DELs_dat-----------------------------------------
