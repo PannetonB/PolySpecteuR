@@ -119,7 +119,7 @@ R_Inst <- InitRamanSpecteuR()
 R_Inst$nomInstrument <- "Raman1"
 
 outlist <- list()   #liste vide pour les matrices de spectre en sortie 
-
+R_Inst$posReps_Raman <-1
 
 for (k in 1:R_Inst$posReps_Raman){
   if (k==1) {
@@ -157,22 +157,26 @@ for (k in 1:R_Inst$posReps_Raman){
     outlist[['Brut']] <- rbind(outlist[['Brut']],y)
     y <- XData[[whichData]][6,-1]
     outlist[['Interpolé']] <- rbind(outlist[['Interpolé']],y)
+    if (R_Inst$do_raman_baseline){
+      whichData <- which(stringr::str_detect(XDatalist,"Rama"))
+      x <- XData[[whichData]][1,-1]
+      y <- XData[[whichData]][7,-1]
+      outlist[['Base']] <- rbind(outlist[['Base']],y)
+      y <- XData[[whichData]][8,-1]
+      outlist[['Corrigé']] <- rbind(outlist[['Corrigé']],y)
+    }
   }
   
-  if (R_Inst$do_raman_baseline){
-    whichData <- which(stringr::str_detect(XDatalist,"Rama"))
-    x <- XData[[whichData]][1,-1]
-    y <- XData[[whichData]][7,-1]
-    outlist[['Base']] <- rbind(outlist[['Base']],y)
-    y <- XData[[whichData]][8,-1]
-    outlist[['Corrigé']] <- rbind(outlist[['Corrigé']],y)
-  }
+  
 }
 
 R_Inst$Spectres <- outlist
 
 Plots_2_Shiny_MultiLevels(R_Inst)
 
+F_Inst$listDepth <- 2
+F_Inst2$listDepth <- 2
+R_Inst$listDepth <- 1
 
 lesInstruments <- list(F_Inst, F_Inst2, R_Inst)                #options
 

@@ -88,7 +88,6 @@ DoRamanSpecteuR <- function(R_Inst,leplan,tuneParams=FALSE)
     mess <- paste0("RAMAN\nPlacer l'échantillon ",leplan$EchID, "à la position ", k,".")
     utils::winDialog("ok",mess)
     
-    dum <- readline(paste0("Placer l'échantillon à la position ", k,"\n"))
     #  └ └   Prendre un spectre brut ----
     cat("   - Signal brut\n")
     with(R_Inst, {Signal=Grab_f_QE(lespectro,OOobj,T_Raman*1000)})

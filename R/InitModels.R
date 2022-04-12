@@ -42,6 +42,13 @@ InitModels<-function(lesInstruments){
   })
   
   #*****************************************************************************
+  #Nomme les éléments de lesInstruments avec nomInstrument----
+  nomsInstrument <- lapply(lesInstruments, function(inst) inst$nomInstrument)
+  names(lesInstruments) <- nomsInstrument 
+  
+  
+  
+  #*****************************************************************************
   #Environnement vide avec les modèles----
   modelEnv <<- new.env(parent = .GlobalEnv)
   
