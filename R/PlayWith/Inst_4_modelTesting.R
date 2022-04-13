@@ -19,7 +19,7 @@ logo <<- png::readPNG("PolySpecteuR_Logo.png")
 load(file.path(here(),"TestData","Rance_Huiles","InSpectoRData_4_models.RData"))
 
 #Fluorescence 1
-source(file.path(here(),"R/PlayWith/InitFluoSpecteuR_noMCDAQ.R"), encoding = 'UTF-8', echo=TRUE)
+source(file.path(here::here(),"R/PlayWith/InitFluoSpecteuR_noMCDAQ.R"), encoding = 'UTF-8', echo=TRUE)
 F_Inst <- InitFluoSpecteuR()
 F_Inst$nomInstrument <- "Fluo1"
 Fluo_EX <- get_DELs_dat("DoEX", mon_envir = F_Inst)
@@ -113,7 +113,7 @@ Plots_2_Shiny_MultiLevels(F_Inst2)
 
 
 #Raman 1
-source(file.path(here(),"R/PlayWith/InitRamanSpecteuR_noLaser.R"), encoding = 'UTF-8', echo=TRUE)
+source(file.path(here::here(),"R/PlayWith/InitRamanSpecteuR_noLaser.R"), encoding = 'UTF-8', echo=TRUE)
 R_Inst <- InitRamanSpecteuR()
 
 R_Inst$nomInstrument <- "Raman1"

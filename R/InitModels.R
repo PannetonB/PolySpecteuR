@@ -31,6 +31,19 @@ InitModels<-function(lesInstruments){
   # AUTEUR: Bernard Panneton, Agriculture et Agroalimentaire Canada
   # Avril 2022
   #*****************************************************************************
+  
+  
+  #*****************************************************************************
+  #get_DELs_dat-----------------------------------------
+  #*****************************************************************************
+  get_DELs_dat <- function(varname,mon_envir=.GlobalEnv)
+    #Fonction pour récupérer des vecteurs/listes de paramètres
+  {
+    dum <- ls(envir = mon_envir, pattern = paste0("^",varname,".$"))
+    dum <- unname(sapply(dum,FUN=function(x) get(x,envir=mon_envir)))
+    return(dum)
+  }
+  
   #*****************************************************************************
   # Charge des librairies additionnelles----
   lesPackages <- c("shiny","miniUI","tools")
@@ -205,15 +218,5 @@ InitModels<-function(lesInstruments){
   
   return(modelEnv)
   
-  #*****************************************************************************
-  #get_DELs_dat-----------------------------------------
-  #*****************************************************************************
-  get_DELs_dat <- function(varname,mon_envir=.GlobalEnv)
-    #Fonction pour récupérer des vecteurs/listes de paramètres
-  {
-    dum <- ls(envir = mon_envir, pattern = paste0("^",varname,".$"))
-    dum <- unname(sapply(dum,FUN=function(x) get(x,envir=mon_envir)))
-    return(dum)
-  }
   #END-----------------------------------------  
 }

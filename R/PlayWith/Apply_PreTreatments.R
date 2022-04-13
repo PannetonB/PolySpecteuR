@@ -15,7 +15,7 @@ Apply_PreTreatments <- function(prepro_params, whichPrepro, unSpectre)
   cntr_n_w <- prepro_params$cntr_n_w[whichPrepro,]
   if (letest){
     wl<-XData_p[1,] # wl vector
-    X<-as.numeric(XData_p[-1,]) # spectrum.
+    X<-as.numeric(XData_p[2,]) # spectrum.
     i1<-which(wl >= (cntr_n_w[1]-cntr_n_w[2]))[1]
     i2<-which(wl >= (cntr_n_w[1]+cntr_n_w[2]))[1]
     X <-  X/mean(X[i1:i2])
@@ -26,8 +26,8 @@ Apply_PreTreatments <- function(prepro_params, whichPrepro, unSpectre)
   letest <- type==3
   if (letest){
     wl<-XData_p[1,] # wl vector
-    X<-as.numeric(XData_p[-1,]) # spectrum.
-    L <- length(wl[[ii]])
+    X<-as.numeric(XData_p[2,]) # spectrum.
+    L <- length(wl)
     X <- X*L/sum(X)
     XData_p <-  rbind(wl,X) #rebuild spectrum with wl
   } 
@@ -47,7 +47,7 @@ Apply_PreTreatments <- function(prepro_params, whichPrepro, unSpectre)
     w_2=floor(w/2)
     wl <- wl[(w_2+1):(length(wl)-w_2)]
     
-    X <- as.numeric(XData_p[-1,]) # spectrum.
+    X <- as.numeric(XData_p[2,]) # spectrum.
     X <- prospectr::savitzkyGolay(X,m,p,w)
     
     XData_p <-  rbind(wl,X) #rebuild spectrum with wl
