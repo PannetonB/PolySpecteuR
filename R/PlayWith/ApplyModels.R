@@ -1,4 +1,6 @@
-ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T,debugPlot=F)
+ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
+                        plotMe=T,debugPlot=F,
+                        width=1000, height=600)
 {
 
   #Charge librairies et fonctions----
@@ -13,18 +15,20 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T
   #*************************************************************************
   #PlotAll
   #*************************************************************************
-  PlotAll <- function(ggplots) {
+  PlotAll <- function(lesplots,echID="") {
     library(keys)
-    nPlots <- length(ggplots)
-    lesNoms <- names(ggplots)
+    nPlots <- length(lesplots)
+    lesNoms <- names(lesplots)
+    whichPlot <- 1
     ui <- miniPage(
       useKeys(),
       keysInput("keys", "enter"),
-      gadgetTitleBar("Résultats des modèles", 
-                     left = NULL,
+      gadgetTitleBar(paste("Résultats des modèles - Échantillon",echID), 
+                     left = miniTitleBarButton("export", "Enregistrer"),
                      right = miniTitleBarButton("done", "Terminer", primary = TRUE)),
-      miniContentPanel(padding = 0,
-                       plotOutput("plot", height = "100%")
+                     
+      miniContentPanel(padding = 10,
+                       imageOutput("plot", height = "100%")
       ),
       miniButtonBlock(
         lapply(1:nPlots, function(i){
@@ -37,16 +41,17 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T
     server <- function(input, output, session) {
       
       # Affichage premier graphique ----
-      output$plot <- renderPlot({
-        print(ggplots[[1]])
-      })
+      output$plot <- renderImage({
+        lesplots[[1]]
+      }, deleteFile=FALSE)
       
       lapply(1:nPlots, function(i){
         leNom <- lesNoms[i]
         observeEvent(input[[leNom]],{
-          output$plot <- renderPlot({
-            print(ggplots[[i]])
-          })
+          output$plot <- renderImage({
+            whichPlot <<- i
+            lesplots[[i]]
+          }, deleteFile=FALSE)
         })
       })
       
@@ -54,11 +59,22 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T
         stopApp()
       })
       
+      observeEvent(input$export,{
+        dataPath <- utils::choose.files(default = "",
+                      caption = "Choisir un nom de fichier",
+                      multi = F, filters = Filters[c("png"),])
+        file.copy(from=lesplots[[whichPlot]]$src,
+                  to=dataPath, overwrite=T)
+      })
+      
       observeEvent(input$done,{
+        dum <- lapply(lesplots, function(p) file.remove(p$src))
         stopApp()
       })
     }
-    runGadget(ui, server)
+    
+    runGadget(ui, server, viewer = dialogViewer("",width=width+30,
+                                                height=height+110))
   }
   
   #*****************************************************************************
@@ -145,8 +161,10 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T
   })
   names(instDataType) <- names(lesInstruments)
   
+  echID <- Plan$EchID
+  
   #BOUCLE SUR LES MODÈLES----
-  ggplots <- list()
+  lesplots <- list()
   nModeles <- length(modelEnv)
   for (kmod in 1:nModeles){
     unModele <- modelEnv[[kmod]]
@@ -216,6 +234,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T
                
                ##### Graphiques----
                if (plotMe){
+                 outfile <- tempfile(fileext = '.png')
+                 png(outfile, width = 1000, height = 700)
+                 
                  nComp <- unModele$pls_ncomp
                  x=unModele$plsFit[[1]]$fitted.values[,,nComp] +  #valeurs du jeud
                    unModele$plsFit[[1]]$residuals[,,nComp]        #d'étalonnage
@@ -223,38 +244,36 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T
                  pred <- unlist(plspreds)  #prédiction pour l'échantillon en cours
                  
                  lm.out <- lm(y ~ x)   #Régression de Prédites vs Mesurées
-                 newx = seq(min(x),max(x),by = 0.05)
                  
-                 # leTitre <- paste(modelName,"- Valeur prédite:",signif(pred,3))
-                 # plot(x, y,
-                 #      main=leTitre,
-                 #      type="p",col="black", pch=21, bg="cyan",
-                 #      xlab="Valeur mesurée",
-                 #      ylab="Valeur prédite")
-                 # abline(lm.out, col="blue",lwd=2)
-                 # abline(a=0,b=1,lty=2,lwd=2,col="black")
-                 # grid()
-                 # abline(h=pred,col="darkgreen",lwd=3)  #valeur pour l'échantillon
-                 # legend("topleft", inset=c(0.01,0.01),
-                 #        legend=c("Données d'étalonnage", "Ligne 1:1",
-                 #                 "Régression","Prédiction"),
-                 #        lty=c(NA,2,1,1), lwd=c(0,2,2,3),
-                 #        pch=c(21,rep(NA,3)), col=c("black","black","blue","darkgreen"),
-                 #        pt.bg = "cyan")
-                 # 
-                 # mydf <- data.frame('Mesuré'=x,'Prédit'=y)
-                 # mylm <- lm(y~x)
+                 leTitre <- paste(modelName,"- Valeur prédite:",
+                                  signif(pred,3),
+                                  " - Échantillon",echID)
+                 plot(x, y,
+                      main=leTitre,
+                      type="p",col="black", pch=21, bg="cyan",
+                      xlab="Valeur mesurée",
+                      ylab="Valeur prédite", 
+                      cex=1.5, cex.lab=1.5, cex.main=2, cex.axis=1.25)
+                 abline(lm.out, col="blue",lwd=2)
+                 abline(a=0,b=1,lty=2,lwd=2,col="black")
+                 grid()
+                 abline(h=pred,col="darkgreen",lwd=3)  #valeur pour l'échantillon
+                 legend("topleft", inset=c(0.01,0.01),
+                        legend=c("Données d'étalonnage", "Ligne 1:1",
+                                 "Régression","Prédiction"),
+                        lty=c(NA,2,1,1), lwd=c(0,2,2,3),
+                        pch=c(21,rep(NA,3)), col=c("black","black","blue","darkgreen"),
+                        pt.bg = "cyan", pt.cex = 1.5, cex=1.5)
+                 dev.off()
                  
-                 leTitre <- paste(modelName,"- Valeur prédite:",signif(pred,3))
-                 
-                 p2 <- ggplot(mydf,aes(Mesuré,Prédit)) + geom_point(alpha=0.8, aes(colour="Données d'étalonnage"), size=3) +
-                   geom_abline(aes(linetype="Régression - Étalonnage",slope=mylm$coefficients[2],intercept = mylm$coefficients[2]),
-                               colour="blue",size=1.2) +
-                   geom_hline(aes(yintercept=pred, size="Nouvelle valeur"), colour="green") +
-                   theme(legend.title=element_blank()) +
-                   ggtitle(leTitre)
-                 nggs <- length(ggplots)
-                 ggplots[[paste0("Mod ",nggs+1)]] <- p2
+                 nggs <- length(lesplots)
+                 lesplots[[paste0("PLS ",nggs+1)]] <- 
+                   list(src = outfile,
+                        contentType = 'image/png',
+                        width = width,
+                        height = height,
+                        alt = "This is alternate text"
+                   )
                }
                
                
@@ -270,6 +289,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T
                  
                  ##### Graphiques----
                  if (plotMe){
+                   outfile <- tempfile(fileext = '.png')
+                   png(outfile, width = 1200, height = 700)
+                   
                    mescols=c("darkred","blue","green3","salmon","yellow3","black","red3","magenta","gray70","cyan") 
                    #To define corresponding lighter transparent colors for symbol fill
                    mescols_fill=col2rgb(mescols,alpha=TRUE)
@@ -283,31 +305,34 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T
                    for (k in seq(1,4,2)){
                      xLimits <- extendrange(c(lesScores[,k],lesPreds[k]))
                      yLimits <- extendrange(c(lesScores[,(k+1)],lesPreds[k+1]))
-                     plot(lesScores[,k],lesScores[,(k+1)], pch = 21, cex=1.5,
+                     plot(lesScores[,k],lesScores[,(k+1)], pch = 21, cex=2,
                           xlim = xLimits,
                           ylim = yLimits,
                           col = "black", bg=mescols_fill[unModele$colorby],
-                          xlab=paste0("PC",k), ylab = paste0("PC",(k+1)))
+                          xlab=paste0("PC",k), ylab = paste0("PC",(k+1)),
+                          cex.lab=1.5, cex.axis=1.5)
                      points(lesPreds[k],lesPreds[k+1]
-                            ,col="white", bg="red", cex=2.5, pch=21)
+                            ,col="white", bg="red", cex=3, pch=21)
                      abline(v=0,h=0,col="gray80",lty=3)
                    }
                    #TITRE et LÉGENDE
                    plot.new()
                    classes <- levels(unModele$colorby)
                    nCl <- length(classes)
-                   legend("topright",legend=c(classes,"Prédiction","Limites"),
+                   legend("bottomright",legend=c(classes,"Prédiction","Limites"),
+                          inset=c(0.1,0),
                           col=c(rep("black",nCl),"white","red"),
                           lty = c(rep(0,nCl),0,2),
                           lwd = c(rep(0,nCl),0,2),
                           pt.bg=c(mescols_fill[1:nCl],"red",NA), 
                           pch=c(rep(21,nCl),21,NA), 
-                          pt.cex = c(rep(1.5,nCl),2.5), cex=0.9)
+                          pt.cex = c(rep(2,nCl),3), cex=2, bty="n")
                    
                    text(0,1,paste0(modelName,"\nsur\n",
                                paste(instCombi,collapse=' et '),
-                               "\n\n", names(preTreatData)[i]),
-                         adj=c(0,1), cex=1.25, font=2)
+                               "\n\n", names(preTreatData)[i],
+                               "\n\nÉchantillon: ",echID),
+                         adj=c(0,1), cex=2, font=2)
                    
                    #ODist vs SDist 
                    #Calcul OD et SD pour l'échantillon
@@ -328,13 +353,27 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T
                         xlim = xLimits,
                         ylim = yLimits,
                         col = "black", bg=mescols_fill[unModele$colorby],
-                        xlab="Distance dans le modèle",
-                        ylab = "Distance résiduelle")
+                        xlab=toupper("Distance dans le modèle"),
+                        ylab = toupper("Distance résiduelle"),
+                        cex.lab=1.5, cex.axis=1.5)
                    points(SD,OD,col="white", bg="red", cex=2.5, pch=21)
                    abline(h=unModele$dds[[i]]$critOD, v=unModele$dds[[i]]$critSD,
                           col="red",lwd=2,lty=2)
+                   
+                   dev.off()
+                   
+                   
+                   nggs <- length(lesplots)
+                   lesplots[[paste0("ACP ",nggs+1)]] <<- #<<- because lapply!
+                     list(src = outfile,
+                          contentType = 'image/png',
+                          width = width,
+                          height = height,
+                          alt = "This is alternate text"
+                     )
+                   
+                   par(mfrow=c(1,1))
                  }
-                 if (plotMe) par(mfrow=c(1,1))
                })
                
              },
@@ -370,21 +409,35 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,plotMe=T
                plsda_cl <- Predict_plsda(unModele,mydata=plsda_set,probs=FALSE)
                ##### Graphiques----
                if (plotMe){
+                 outfile <- tempfile(fileext = '.png')
+                 png(outfile, width = 1200, height = 700)
+                 
                  p <- ggplot(data.frame(x=names(plsda_probs), y=as.numeric(plsda_probs[1,])),
                         aes(x=x, y=y, fill=y)) + 
                    ggplot2::geom_bar(stat="identity") + 
                    ggplot2::scale_fill_gradient(low = "red", high = "green") +
                    theme(legend.position="none", text = element_text(size = 16)) +
                    ggtitle(paste(modelName,"sur",
-                                 paste(instCombi,collapse=' et '))) +
+                                 paste(instCombi,collapse=' et '),
+                                 "- Échantillon",echID)) +
                    labs(y="Probabilité prédite", x="Classes") 
-                 nggs <- length(ggplots)
-                 ggplots[[paste0("Mod ",nggs+1)]] <- p
+                 print(p)
+                 
+                 dev.off()
+                 nggs <- length(lesplots)
+                 lesplots[[paste0("PLSDA ",nggs+1)]] <- 
+                   list(src = outfile,
+                        contentType = 'image/png',
+                        width = width,
+                        height = height,
+                        alt = "This is alternate text"
+                   )
           
                }
              }
       )
     }
   }
-  PlotAll(ggplots)
+  PlotAll(lesplots,echID)
+  return(lesplots)
 }
