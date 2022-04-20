@@ -19,6 +19,8 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
     library(keys)
     nPlots <- length(lesplots)
     lesNoms <- names(lesplots)
+    modelNames <- lapply(lesplots, function(p) p$alt)
+    names(modelNames) <- NULL
     whichPlot <- 1
     ui <- miniPage(
       useKeys(),
@@ -27,14 +29,10 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                      left = miniTitleBarButton("export", "Enregistrer"),
                      right = miniTitleBarButton("done", "Terminer", primary = TRUE)),
                      
+      column(12, align="left",
+             selectInput("modelselect","  Choisir un modèle", unlist(modelNames), width=0.8*width)),
       miniContentPanel(padding = 10,
                        imageOutput("plot", height = "100%")
-      ),
-      miniButtonBlock(
-        lapply(1:nPlots, function(i){
-          leNom <- lesNoms[i]
-          actionButton(leNom,leNom)
-        })
       )
     )
     
@@ -42,24 +40,18 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
       
       # Affichage premier graphique ----
       output$plot <- renderImage({
-        lesplots[[1]]
+        whichPlot <- which(input$modelselect==unlist(modelNames))
+        lesplots[[whichPlot]]
       }, deleteFile=FALSE)
       
-      lapply(1:nPlots, function(i){
-        leNom <- lesNoms[i]
-        observeEvent(input[[leNom]],{
-          output$plot <- renderImage({
-            whichPlot <<- i
-            lesplots[[i]]
-          }, deleteFile=FALSE)
-        })
-      })
+      
       
       observeEvent(input$keys,{
         stopApp()
       })
       
       observeEvent(input$export,{
+        whichPlot <- which(input$modelselect==unlist(modelNames))
         dataPath <- utils::choose.files(default = "",
                       caption = "Choisir un nom de fichier",
                       multi = F, filters = Filters[c("png"),])
@@ -74,7 +66,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
     }
     
     runGadget(ui, server, viewer = dialogViewer("",width=width+30,
-                                                height=height+110))
+                                                height=height+150))
   }
   
   #*****************************************************************************
@@ -272,7 +264,8 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                         contentType = 'image/png',
                         width = width,
                         height = height,
-                        alt = "This is alternate text"
+                        alt = paste0(modelName," sur ",
+                                     paste(instCombi,collapse=' et '))
                    )
                }
                
@@ -369,7 +362,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                           contentType = 'image/png',
                           width = width,
                           height = height,
-                          alt = "This is alternate text"
+                          alt = paste0(modelName," sur ",
+                                       paste(instCombi,collapse=' et '),
+                                       " - ",names(preTreatData)[i])
                      )
                    
                    par(mfrow=c(1,1))
@@ -430,7 +425,8 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                         contentType = 'image/png',
                         width = width,
                         height = height,
-                        alt = "This is alternate text"
+                        alt = paste0(modelName," sur ",
+                                     paste(instCombi,collapse=' et '))
                    )
           
                }
