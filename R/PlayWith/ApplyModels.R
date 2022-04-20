@@ -237,7 +237,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                  
                  lm.out <- lm(y ~ x)   #Régression de Prédites vs Mesurées
                  
-                 leTitre <- paste(modelName,"- Valeur prédite:",
+                 leTitre <- paste(modelName," sur ",
+                                  paste(instCombi,collapse=' et '),
+                                  "- Valeur prédite:",
                                   signif(pred,3),
                                   " - Échantillon",echID)
                  plot(x, y,
@@ -245,7 +247,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                       type="p",col="black", pch=21, bg="cyan",
                       xlab="Valeur mesurée",
                       ylab="Valeur prédite", 
-                      cex=1.5, cex.lab=1.5, cex.main=2, cex.axis=1.25)
+                      cex=1.5, cex.lab=1.5, cex.main=1.6, cex.axis=1.25)
                  abline(lm.out, col="blue",lwd=2)
                  abline(a=0,b=1,lty=2,lwd=2,col="black")
                  grid()
@@ -435,5 +437,5 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
     }
   }
   PlotAll(lesplots,echID)
-  return(lesplots)
+  return()
 }
