@@ -172,7 +172,7 @@ InitModels<-function(lesInstruments){
     rownames(dataSource) <- unlist(lesnoms)
     colnames(dataSource) <- requiredTypes_4_Model
     #Retire rangée (instrument) avec seulement des FALSE
-    dataSource <- dataSource[rowSums(dataSource)!=0,]
+    dataSource <- dataSource[rowSums(dataSource)!=0,,drop=F]
     canApplyModel <- all(colSums(dataSource)>0)
     if (canApplyModel){
       nInstruments <- nrow(dataSource)
@@ -213,7 +213,16 @@ InitModels<-function(lesInstruments){
   })
   
   for (i in 1:length(workingInstCombi)){
-    modelEnv[[i]]$workingInstCombi <- workingInstCombi[[i]]
+    if (workingInstCombi[[i]][1] == "NON"){
+      utils::winDialog("ok",
+                       paste0("Modèle ",names(modelEnv)[i], " ne sera pas utilisé.\n",
+                              "Les données acquises ne conviennent pas.")
+      )
+      modelEnv[[i]] <- NULL
+    }else
+    {
+      modelEnv[[i]]$workingInstCombi <- workingInstCombi[[i]]
+    }
   }
   
   return(modelEnv)

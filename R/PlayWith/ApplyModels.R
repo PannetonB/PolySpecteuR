@@ -7,6 +7,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
   library(ggplot2)
   library(shiny)
   library(miniUI)
+  library(pls)
   
   
   source(file.path(here::here(),"R/PlayWith/Apply_PreTreatments.R"), encoding = 'UTF-8')
@@ -52,11 +53,11 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
       
       observeEvent(input$export,{
         whichPlot <- which(input$modelselect==unlist(modelNames))
-        dataPath <- utils::choose.files(default = "",
+        unPath <- utils::choose.files(default = "",
                       caption = "Choisir un nom de fichier",
                       multi = F, filters = Filters[c("png"),])
         file.copy(from=lesplots[[whichPlot]]$src,
-                  to=dataPath, overwrite=T)
+                  to=unPath, overwrite=T)
       })
       
       observeEvent(input$done,{
@@ -223,6 +224,36 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                plspreds<-predict(unModele$plsFit[[1]],
                                  newdata = pls_set,
                                  ncomp=unModele$pls_ncomp)
+               ##### Sortie fichier----
+               leDir <- file.path(dataPath,"resModel")
+               if (!dir.exists(leDir)) dir.create(leDir)
+               fname <- file.path(leDir,paste0(modelName,"_",paste(instCombi,collapse='_'),".txt"))
+               #Création d'une ligne pour écrire dans le fichier.
+               ligne=NULL
+               #Date et heure pour insérer dans le fichier
+               ladate=as.character(Sys.Date())
+               letemps=format(Sys.time(),"%X")
+               
+               ncol=dim(Plan$leplan)[2]
+               for (i in 1:ncol){
+                 ligne=c(ligne,as.character(Plan$leplan[Plan$selected,i]))
+               }
+               ligne=c(ligne,ladate,letemps,as.character(signif(plspreds,4)))
+               if (file.exists(fname)) {  #append
+                 mycon=file(fname,"a")
+                 cat(ligne,file=mycon,sep="\t")
+                 cat("\n",file=mycon)
+                 close(mycon)
+               }else
+               {
+                 entete=c(names(Plan$leplan),"Date","Heure","Prédiction")
+                 mycon=file(fname,"a")   
+                 cat(entete,file=mycon,sep="\t")   #entête
+                 cat("\n",file=mycon)
+                 cat(ligne,file=mycon,sep="\t") #données
+                 cat("\n",file=mycon)
+                 close(mycon)
+               }
                
                ##### Graphiques----
                if (plotMe){
@@ -252,12 +283,25 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                  abline(a=0,b=1,lty=2,lwd=2,col="black")
                  grid()
                  abline(h=pred,col="darkgreen",lwd=3)  #valeur pour l'échantillon
-                 legend("topleft", inset=c(0.01,0.01),
+                 legend("bottomright", inset=c(0.01,0.01),
                         legend=c("Données d'étalonnage", "Ligne 1:1",
                                  "Régression","Prédiction"),
                         lty=c(NA,2,1,1), lwd=c(0,2,2,3),
                         pch=c(21,rep(NA,3)), col=c("black","black","blue","darkgreen"),
                         pt.bg = "cyan", pt.cex = 1.5, cex=1.5)
+                 R2 <- signif(pls::R2(unModele$plsFit[[1]],
+                               ncomp=unModele$plsFit[[1]]$ncomp,
+                               intercept=0,
+                               estimate="CV")$val,3)
+                 RMSECV <- signif(pls::RMSEP(unModele$plsFit[[1]],
+                                      ncomp=unModele$plsFit[[1]]$ncomp,
+                                      intercept=0,
+                                      estimate="adjCV")$val,3)
+                 legend("topleft", inset=c(0.02,0.02),
+                        legend=c(paste0("R²(V.C) = ",R2),
+                                 paste0("RMSECV (adj) = ",RMSECV)),
+                        cex=1.5
+                        )
                  dev.off()
                  
                  nggs <- length(lesplots)
@@ -286,24 +330,28 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                  if (plotMe){
                    outfile <- tempfile(fileext = '.png')
                    png(outfile, width = 1200, height = 700)
+                  
+                   toColor <- unModele$colorby
+                   if (is.data.frame(toColor)) toColor <- as.factor(rep("Données",nrow(toColor)))
                    
                    mescols=c("darkred","blue","green3","salmon","yellow3","black","red3","magenta","gray70","cyan") 
                    #To define corresponding lighter transparent colors for symbol fill
                    mescols_fill=col2rgb(mescols,alpha=TRUE)
                    mescols_fill[4,]=145
                    mescols_fill=rgb(mescols_fill[1,],mescols_fill[2,],mescols_fill[3,],alpha=mescols_fill[4,],maxColorValue = 255)
-                   recycling=ceiling(length(unique(unModele$colorby))/10)  #Only 10 colors defined, so we recycle if necessary
+                   recycling=ceiling(length(unique(toColor))/10)  #Only 10 colors defined, so we recycle if necessary
                    mescols_fill=rep(mescols_fill,recycling)
                    
                    par(mfrow=c(2,2))
                    lesScores <- unModele$lesACPs[[i]]$x
+                   
                    for (k in seq(1,4,2)){
                      xLimits <- extendrange(c(lesScores[,k],lesPreds[k]))
                      yLimits <- extendrange(c(lesScores[,(k+1)],lesPreds[k+1]))
                      plot(lesScores[,k],lesScores[,(k+1)], pch = 21, cex=2,
                           xlim = xLimits,
                           ylim = yLimits,
-                          col = "black", bg=mescols_fill[unModele$colorby],
+                          col = "black", bg=mescols_fill[toColor],
                           xlab=paste0("PC",k), ylab = paste0("PC",(k+1)),
                           cex.lab=1.5, cex.axis=1.5)
                      points(lesPreds[k],lesPreds[k+1]
@@ -312,7 +360,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                    }
                    #TITRE et LÉGENDE
                    plot.new()
-                   classes <- levels(unModele$colorby)
+                   classes <- levels(toColor)
                    nCl <- length(classes)
                    legend("bottomright",legend=c(classes,"Prédiction","Limites"),
                           inset=c(0.1,0),
@@ -332,13 +380,13 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                    #ODist vs SDist 
                    #Calcul OD et SD pour l'échantillon
                    #Voir manuel de PLS Toolbox de EigenVector dans Doc du projet
-                   scs <- lesPreds
+                   scs <- lesPreds[1,1:unModele$lesNCPs[[i]],drop=F]
                    eigVals <- unModele$lesACPs[[i]]$sdev[1:unModele$lesNCPs[[i]]] 
                    midMat <- diag(1/eigVals^2)
                    SD <- sqrt(scs %*% midMat %*% t(scs))
                    
                    x <- as.matrix(newdats-unModele$lesACPs[[i]]$center)
-                   lds <- unModele$lesACPs[[i]]$rotation
+                   lds <- unModele$lesACPs[[i]]$rotation[,1:unModele$lesNCPs[[i]],drop=F]
                    midMat <- diag(nrow=dim(x)[2]) - lds %*% t(lds)
                    OD <- sqrt(x %*% midMat %*% t(x))
                    
@@ -347,7 +395,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                    plot(unModele$dds[[i]]$SDist,unModele$dds[[i]]$ODist, pch = 21, cex=1.5,
                         xlim = xLimits,
                         ylim = yLimits,
-                        col = "black", bg=mescols_fill[unModele$colorby],
+                        col = "black", bg=mescols_fill[toColor],
                         xlab=toupper("Distance dans le modèle"),
                         ylab = toupper("Distance résiduelle"),
                         cex.lab=1.5, cex.axis=1.5)
@@ -404,22 +452,61 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                
                plsda_probs <- Predict_plsda(unModele,mydata=plsda_set,probs=TRUE)
                plsda_cl <- Predict_plsda(unModele,mydata=plsda_set,probs=FALSE)
-               ##### Graphiques----
+               
+               ##### Sortie fichier----
+               leDir <- file.path(dataPath,"resModel")
+               if (!dir.exists(leDir)) dir.create(leDir)
+               fname <- file.path(leDir,paste0(modelName,"_",paste(instCombi,collapse='_'),".txt"))
+               #Création d'une ligne pour écrire dans le fichier.
+               ligne=NULL
+               #Date et heure pour insérer dans le fichier
+               ladate=as.character(Sys.Date())
+               letemps=format(Sys.time(),"%X")
+               
+               ncol=dim(Plan$leplan)[2]
+               for (i in 1:ncol){
+                 ligne=c(ligne,as.character(Plan$leplan[Plan$selected,i]))
+               }
+               ligne=c(ligne,ladate,letemps,
+                       as.character(signif(plsda_probs,4)),
+                       as.character(plsda_cl))
+               if (file.exists(fname)) {  #append
+                 mycon=file(fname,"a")
+                 cat(ligne,file=mycon,sep="\t")
+                 cat("\n",file=mycon)
+                 close(mycon)
+               }else
+               {
+                 entete=c(names(Plan$leplan),"Date","Heure",names(plsda_probs),"Prédiction")
+                 mycon=file(fname,"a")   
+                 cat(entete,file=mycon,sep="\t")   #entête
+                 cat("\n",file=mycon)
+                 cat(ligne,file=mycon,sep="\t") #données
+                 cat("\n",file=mycon)
+                 close(mycon)
+               }
+               ##### Graphique----
+               
+               nCl <- length(levels(plsda_cl))
+               pred_prob <- Predict_plsda(unModele,probs=TRUE)
+               dum1<-data.frame(cl=unModele$plsdaFit[[1]]$trainingData[,1],pred_prob)
+               dum2<-tidyr::gather(dum1,Pred,Prob,-cl,factor_key = TRUE)
+               levels(dum2$cl)=paste("True: ",levels(dum2$cl),sep="")
                if (plotMe){
                  outfile <- tempfile(fileext = '.png')
                  png(outfile, width = 1200, height = 700)
                  
-                 p <- ggplot(data.frame(x=names(plsda_probs), y=as.numeric(plsda_probs[1,])),
-                        aes(x=x, y=y, fill=y)) + 
-                   ggplot2::geom_bar(stat="identity") + 
-                   ggplot2::scale_fill_gradient(low = "red", high = "green") +
-                   theme(legend.position="none", text = element_text(size = 16)) +
-                   ggtitle(paste(modelName,"sur",
-                                 paste(instCombi,collapse=' et '),
-                                 "- Échantillon",echID)) +
-                   labs(y="Probabilité prédite", x="Classes") 
+                 p<-ggplot2::ggplot(dum2,ggplot2::aes(Pred,Prob))
+                 p<-p+ggplot2::geom_boxplot()
+                 p<-p+geom_col(data=data.frame(cl=rep(paste0("PRÉDICTION - ",plsda_cl),nCl),
+                                                 Pred=colnames(plsda_probs),
+                                                 Prob=as.numeric(plsda_probs[1,])),
+                                 ggplot2::aes(Pred,Prob), colour=NA, fill="red")
+                 p<-p +ggplot2::facet_wrap(~cl)
+                                           
+                 p<-p + ggplot2::theme(text = element_text(size=20))
+                 p<-p + ggplot2::theme(axis.text.x = element_text(angle=60, hjust=1, vjust=1))
                  print(p)
-                 
                  dev.off()
                  nggs <- length(lesplots)
                  lesplots[[paste0("PLSDA ",nggs+1)]] <- 
@@ -430,12 +517,11 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                         alt = paste0(modelName," sur ",
                                      paste(instCombi,collapse=' et '))
                    )
-          
                }
              }
       )
     }
   }
   PlotAll(lesplots,echID)
-  return()
+  invisible()
 }
