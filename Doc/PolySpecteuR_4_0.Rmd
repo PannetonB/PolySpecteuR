@@ -30,7 +30,7 @@ toccolor: red
 
 **PolySpecteuR 4.0** est une suite de scripts R constituant des blocs à partir desquels une application dédiée d'acquisition de données spectroscopique est construite. Cette suite s'utilise conjointement avec le **SpectrAAC**, une plateforme matérielle d'acquisition de données spectroscopiques développée par Dr Alain Clément du Centre de R&D de St-Hyacinthe d'Agriculture et Agroalimentaire Canada.
 
-La plateforme **SpectrAAC** est flexible et permet l'acquisition de données d'autofluorescence induite, de réflectance, de transmittance et de diffusion Raman. La particularité de cette plateforme est de permettre différentes mesures de spectroscopie sur un même échantillon. Par exemple, pour un projet en particulier, des mesures d'autofluorescence induite à plusieurs longueurs d'onde d'excitation peuvent être couplées à des mesures de réflectance. **PolySpecteuR 4.0** est l'outil logiciel polyvalent permettant d'interagir avec **SpectrAAC** pour piloter l'acquisition des données et constituer une base de données dont le format est compatible avec **InSpectoR**. **InSpectoR** est un outil logiciel d'analyse de données spectroscopiques dont la particularité est de permettre de façon fluide, l'analyse et le développement de modèles chimiométriques s'appuyant simultanément sur plusieurs spectres. Toute la partie logicielle (**PolySpecteuR** et **InSpectoR**) est programmée en [R](https://www.r-project.org/).
+La plateforme **SpectrAAC** est flexible et permet l'acquisition de données d'autofluorescence induite, de réflectance, de transmittance et de diffusion Raman. La particularité de cette plateforme est de permettre différentes mesures de spectroscopie sur un même échantillon. Par exemple, pour un projet en particulier, des mesures d'autofluorescence induite à plusieurs longueurs d'onde d'excitation peuvent être couplées à des mesures de réflectance. **PolySpecteuR 4.0** est l'outil logiciel polyvalent permettant d'interagir avec **SpectrAAC** pour piloter l'acquisition des données et constituer une base de données dont le format est compatible avec **InSpectoR**. **InSpectoR** est un outil logiciel d'analyse de données spectroscopiques dont la particularité est de permettre de façon fluide, l'analyse et le développement de modèles chimiométriques s'appuyant simultanément sur plusieurs spectres. Toute la partie logicielle (**PolySpecteuR** et **InSpectoR**) est programmée en [R](https://www.r-project.org/). En plus lors de l'acquisition de données, des modèles existants développés dans **InSpectoR** peuvent être appliqués à ces données pour chaque échantillon.
 
 Ce document décrit de façon sommaire l'architecture de **PolySpecteuR 4.0.** Le but est de donner une vue d'ensemble facilitant la navigation à travers les différents scripts **R** qui composent la suite. Le fonctionnement de chaque script **R** peut être analysé à l'aide des commentaires inclus dans chaque script.
 
@@ -38,7 +38,7 @@ Ce document décrit de façon sommaire l'architecture de **PolySpecteuR 4.0.** L
 
 -   des scripts R dans le sous-répertoire *R*,
 
--   des fichiers de calibration d'instrument dans des sous-répertoires *Calib_xxx*,
+-   des fichiers de calibration d'instrument dans un sous-répertoire *Calib_Data*,
 
 -   du code en C dans le sous-répertoire *C*,
 
@@ -52,7 +52,9 @@ Ce document décrit de façon sommaire l'architecture de **PolySpecteuR 4.0.** L
 
 -   des notes de travail dans le sous-répertoire *Notes*,
 
--   la documentation dans le sous-répertoire *Doc*.
+-   la documentation dans le sous-répertoire *Doc*,
+
+-   des données ayant servi à tester le code en développement dans *TestData*.
 
 **PolySpecteuR 4.0** a été conçu pour fonctionner dans l'environnement de travail [RStudio](https://www.rstudio.com/). Cet environnement permet de créer une interface usager de base avec une console pour l'interaction avec l'opérateur et un panneau d'affichage pour les graphiques et des interfaces graphiques basées sur [Shiny](https://shiny.rstudio.com/).
 
@@ -60,30 +62,35 @@ Ce document décrit de façon sommaire l'architecture de **PolySpecteuR 4.0.** L
 
 Une session d'acquisition de données peut comporter cinq éléments:
 
-1.  Identifier les échantillons;
+1.  Initialiser les composantes matérielles (spectromêtres, lampes, ...);
 
-2.  Initialiser les composantes matérielles (spectromêtres, lampes, ...);
+2.  Choisir les modèles à appliquer aux nouvelles données;
 
-3.  Acquérir les spectres;
+3.  Identifier les échantillons;
 
-4.  Stocker les données;
+4.  Acquérir les spectres;
 
-5.  Appliquer un ou des modèles aux nouvelles données.
+5.  Appliquer un ou des modèles aux nouvelles données;
 
-Dans **PolySpecteuR 4.0**, ces cinq éléments sont mis en œuvre à l'aide de scripts dédiés. Pour les éléments 2 et 3, des scripts spécifiques à chaque type de données spectroscopiques (e.g. fluorescence, Raman, ...) sont disponibles. A partir de ces scripts, l'utilisateur peut facilement créer un session d'acquisition de données en écrivant un script R simple.
+6.  Stocker les données.
 
-L'exemple dans la boîte de code plus bas illustre la démarche. Ce script permet l'acquisition de données de diffusion Raman sur un instrument. Les données sont simplement saisies et aucun modèle ne sera appliqué aux données. Dans la première partie du script (\#*Initialisation*), on charge des *packages R* et tous les scripts de la suite **PolySpecteuR**, l'initialisation des instruments est lancée, un plan d'expérience est chargé et on définit un nom permettant l'identification du jeu de données. Ce nom permet de lier les fichiers de descripteurs des échantillons (fichiers Y) et les différents fichiers de données spectroscopiques, un fichier par type de mesure. Cette première partie se termine en demandant à l'usager s'il veut modifier les paramètres d'acquisition à chaque itération, ce qui est utile en phase de rodage de protocoles de prise de données.
+Dans **PolySpecteuR 4.0**, ces éléments sont mis en œuvre à l'aide de scripts dédiés. Pour les éléments 1 et 4, des scripts spécifiques à chaque type de données spectroscopiques (e.g. fluorescence, Raman, ...) sont disponibles. A partir de ces scripts, l'utilisateur peut facilement créer un session d'acquisition de données en écrivant un script R simple.
 
-La deuxième partie du script (\#*Phase d'acquisition de données*) est consacrée à l'acquisition et au stockage des données. À chaque itération de la boucle *while*, on traite un échantillon: on choisit un échantillon, l'acquisition des spectres est lancée, les données sont validées par l'opérateur puis les données valides sont enregistrées. Finalement, l'opérateur choisit d'interrompre ou pas la séquence d'acquisition. La dernière partie du script (\#*Nettoyage et arrêt du script*) permet de terminer la session. Pour construire un nouveau protocole d'acquisition, l'opérateur n'a qu'à modifier les 2 lignes de codes identifiées par "\#*options"*. Tout le reste du script d'acquisition reste inchangé. Avec ce schéma d'acquisition, la priorité va aux échantillons dans le sens que pour un échantillon donné, on procède à toutes les mesures en séquence puis on passe à un autre échantillon. D'autres exemples des scripts sont donnés à l'[Annexe A](#annexe-a).
+L'exemple dans la boîte de code plus bas illustre la démarche. Ce script permet l'acquisition de données de diffusion Raman sur un instrument. Un ou des modèles peuvent être appliqué(s) aux nouvelles données. Dans la première partie du script (\#*Initialisation*), on charge des *packages R* et tous les scripts de la suite **PolySpecteuR**, l'initialisation des instruments est lancée, le choix de modèles est fait, un plan d'expérience est chargé et on définit un nom permettant l'identification du jeu de données. Ce nom permet de lier les fichiers de descripteurs des échantillons (fichiers Y) et les différents fichiers de données spectroscopiques, un fichier par type de mesure. Cette première partie se termine en demandant à l'usager s'il veut modifier les paramètres d'acquisition à chaque itération, ce qui est utile en phase de rodage de protocoles de prise de données.
+
+La deuxième partie du script (\#*Phase d'acquisition de données*) est consacrée à l'acquisition, au calcul des modèles et au stockage des données. À chaque itération de la boucle *while*, on traite un échantillon: on choisit un échantillon, l'acquisition des spectres est lancée, les données sont validées par l'opérateur puis les données valides sont enregistrées et les modèles appliqués. Finalement, l'opérateur choisit d'interrompre ou pas la séquence d'acquisition. La dernière partie du script (\#*Nettoyage et arrêt du script*) permet de terminer la session. Pour construire un nouveau protocole d'acquisition, l'opérateur n'a qu'à modifier les lignes de codes identifiées par "\#*options"*. Tout le reste du script d'acquisition reste inchangé. Une méthode facilitant l'édition de scripts en mettant l'accent sur les parties où se trouvent les "*\#options*" est décrite à l'[Annexe B](#annexe-b).
+
+Avec ce schéma d'acquisition, la priorité va aux échantillons dans le sens que pour un échantillon donné, on procède à toutes les mesures en séquence puis on passe à un autre échantillon. D'autres exemples des scripts sont donnés à l'[Annexe A](#annexe-a).
 
 \newpage
 
 ::: {.blackbox data-latex=""}
 ``` {#MainScript}
-mainRaman <- function()
-****************************************************************************
+mainRaman_w_Models <- function()
+
+#*****************************************************************************
 # INSTRUCTIONS ----  
-#***************************************************************************
+#*****************************************************************************
 # Script d'acquisition de données avec SpectrAAC-2 lorsqu'on ne fait que du  
 # Raman.
 # Pour utiliser un autre instrument ou plusieurs instruments, il faut modifier
@@ -101,10 +108,15 @@ mainRaman <- function()
 # Noter que l'ordre dans cette liste définit l'ordre d'acquisition des 
 # données.
 #
-#***************************************************************************
+# Finalement, on doit modifier le groupe de lignes identifiées par
+# "OPTIONS - Choisir des modèles à appliquer aux données et les initialiser"
+# selon que l'on veuille ou non appliquer un ou des modèles aux nouvelles
+# données après chaque échantillon.
+#
+#*****************************************************************************
 # AUTEUR: Bernard Panneton, Agriculture et Agroalimentaire Canada
 # Février 2022
-#***************************************************************************
+#*****************************************************************************
 {  
   #********************************************************
   #Initialisation ----
@@ -112,7 +124,7 @@ mainRaman <- function()
   #Paramètres graphiques par défaut et logo comme variables globales.
   op <<- par(no.readonly = TRUE)   
   logo <<- png::readPNG("PolySpecteuR_Logo.png")
-  
+  doModels <- FALSE                                              
   #********************************************************
   ## Enlève OOobj si existant----
   if (exists("OOobj", envir = .GlobalEnv))  rm(OOobj, envir=.GlobalEnv)
@@ -146,7 +158,7 @@ mainRaman <- function()
   setwd("..")
   
   #********************************************************
-  ## Définir les instruments nécessaires et les initialiser ----
+  ## OPTIONS - Définir les instruments nécessaires et les initialiser ---- 
   #********************************************************
   
   R_Inst <- InitRamanSpecteuR()   #instrument pour Raman         #options
@@ -156,18 +168,33 @@ mainRaman <- function()
   
   lestypes <- lapply(lesInstruments, function(I) I$type)
   
+  
   #********************************************************
-  ## Définir le plan d'expérience et le chemin pour stocker les données ----
+  ## OPTIONS - Choisir des modèles à appliquer aux données et les initialiser ----
+  # Enlever ce bloc ou le mettre en commentaire si pas de modèles
+  #********************************************************
+  modelEnv <- InitModels(lesInstruments)                         #options
+  goOn <- utils::winDialog("yesno",                              #options
+                           "Continuer cette session?")           #options
+  if (!goOn){                                                    #options
+    return()                                                     #options
+  }else                                                          #options
+  {                                                              #options
+    doModels <- TRUE                                             #options
+  }                                                              #options
+ 
+  #********************************************************
+  ## Définir plan d'expérience et chemin pour stocker les données ----
   #********************************************************
   Plan <- GetPlanExp()
   dataSetID <-utils::winDialogString(
     "Entrer un identifiant pour les noms de fichier de données",
     as.character(Sys.Date()))
   dataPath <- utils::choose.dir(default = "",
-          caption = "Choisir un répertoire pour stocker les données.")
+        caption = "Choisir un répertoire pour stocker les données.")
   
   #********************************************************
-  ## Permettre la modif des paramètres d'acquisition à chaque échantillon ----
+  ## Permettre modif paramètres d'acquisition à chaque échantillon ----
   #********************************************************
   tuneParams <- FALSE
   yesno <- utils::winDialog("yesno",
@@ -217,12 +244,32 @@ mainRaman <- function()
       ## Écriture des données si valides----
       if (isValid){      
          writeYFile(Plan, dataPath,dataSetID)
-         writeData(Plan,lesInstruments,dataPath,dataSetID) #options
+         writeData(Plan,lesInstruments,dataPath,dataSetID) 
+         if (doModels){
+           ApplyModels(Plan,lesInstruments,modelEnv,dataPath,dataSetID)
+         }
+
+      }else
+        #Enlève la dernière entrée si plan manuel.  
+      {
+        if (Plan$leType == "Manuel"){
+          nRowPlan <- nrow(Plan$leplan)
+          if (nRowPlan==1){
+            Plan$leplan <- data.frame()
+            Plan$selected <- 0
+            Plan$EchID <- ""
+          }else
+          {
+            Plan$leplan <- Plan$leplan[-nRowPlan,]
+            Plan$selected <- nRowPlan-1
+            Plan$EchID <- Plan$leplan[Plan$selected,1]
+          }
+        }
       }
     }  
     
     ###Option de continuer ou quitter ----
-    sel <- select.list(c("Oui","Non"), preselect = "Oui",
+    sel <- select.list(c("Oui","Non"), preselect = "Oui", 
           title="CONTINUER?",graphics = T)
     goOn <- ifelse(sel=="Oui",TRUE,FALSE)
   }        #Fin de la boucle sur les échantillons
@@ -241,6 +288,62 @@ mainRaman <- function()
 # Scripts R
 
 Le projet **PolySpecteuR** comprend plusieurs scripts **R** qu'on utilise dans un script comme celui dans la boîte de code ci-dessus. Ce script charge tous les scripts de **PolySpecteuR** dans l'environnement R de base dans le bloc identifié *Charger les scripts du projet PolySpecteuR*. Cette section donne une présentation sommaire de ces scripts. Pour une compréhension détaillée, prière de consulter les scripts qui comportent suffisamment de commentaires pour permettre de suivre le déroulement.
+
+## Apply_PreTreatments.R
+
+1.  Appel de la fonction: ***Apply_PreTreatments(prepro_params, whichPrepro, unSpectre)***
+
+2.  Paramètres d'entrée:
+
+    -   *prepro_params* : liste de paramètres de prétraitement stockée par *InSpectoR* lors de la création du modèle;
+    -   *whichPrepro* : indice correspondant à la position du type de spectres dans les listes de *prepro_params;*
+    -   *unSpectre* : matrice pour un type de spectre avec les longueurs d'onde sur la première ligne et un spectre sur la deuxième ligne
+
+3.  Sortie: spectre de données prétraitées dont le format est comme celui de *unSpectre*.
+
+4.  Détails: Voir *InSpectoR* pour les types de prétraitement et le format de *prepro_params*.
+
+## ApplyModels.R
+
+1.  Appel de la fonction: ***ApplyModels(Plan ,lesInstruments,\
+    modelEnv, dataPath, dataSetID,\
+    plotMe=T, debugPlot=F, \
+    width=1000, height=600)***
+
+2.  Paramètres d'entrée:
+
+    -   *Plan* : plan d'expérience (liste) tel que créé par *GetPlanExp.R* et modifié par *PickFromPlan.R;*
+    -   *lesInstruments*: : liste créé par une routine mainXXXX.R (e.g. mainFluo.R);
+    -   *modelEnv* : liste d'environnements de modèles créée par *InitModels.R*;
+    -   *dataPath* : répertoire de base pour le stockage des données. Les sorties de modèle sont dans un sous-répertoire *resModel*;
+    -   *dataSetID* : identifiant pour former le nom du fichier. Le même identifiant doit être utilisé pour les fichiers des spectres;
+    -   *plotMe* : si *TRUE*, des graphiques montrant les résultats des modèles sont présentés dans un gadget *Shiny*;
+    -   *debugPlot* : si TRUE, produit des graphiques utiles pour déboguer l'étape du prétraitement;
+    -   *width, height* : dimension en pixels du gadget *Shiny* pour les graphiques des résultats des modèles.
+
+3.  Sortie: graphiques pouvant être enregistrés comme image au besoin. Des fichiers contenant les identificateurs des échantillons et les résultats du calcul des modèles dans les cas de la PLS et PLSDA.
+
+## Clean_n\_Close.R
+
+1.  Appel de la fonction: ***Clean_n\_Close(lesInstr)***
+
+2.  Paramètres d'entrée:
+
+    -   *lesInstr*: : liste créé par une routine mainXXXX.R (e.g. mainFluo.R)
+
+3.  Sortie: Aucune.
+
+4.  Détails: Ferme le laser si nécessaire, ferme des libraires et tous les spectromètres.
+
+## Define_Descrip.R
+
+1.  Appel de la fonction: ***Define_Descrip()***
+
+2.  Paramètres d'entrée: Aucun.
+
+3.  Sortie: un *data frame* avec une colonne *Champ* stockant le nom des champs pour identifier les échantillons, un nom par ligne.
+
+4.  Détails: Gadget Shiny pour saisir les noms des descripteurs. Appelé par *GetPlanExp.R* le cas échéant.
 
 ## DoFluoSpecteuR.R
 
@@ -415,6 +518,18 @@ Le projet **PolySpecteuR** comprend plusieurs scripts **R** qu'on utilise dans u
     -   Option 2: fait apparaître une fenêtre dans le panneau *Viewer* de **RStudio** permettant de compléter tous les champs décrivant un échantillon (voir ci-dessous). Le champ *EchID* est obligatoire et doit contenir un identifiant unique. Si l'opérateur entre un identifiant déjà utilisé, les caractères "\_bis" sont automatiquement ajoutés. Pour les autres champs (ici *Traitement* et *Bloc*), il s'agit de choisir dans la liste. On peut ajouter à la liste en faisant une entrée à la main. Cette nouvelle entrée sera disponible pour la définition des échantillons subséquents. Le tableau au bas présente les 5 dernières entrées faites par l'utilisateur comme aide-mémoire (3 dans l'exemple plus bas car seules 3 entrées ont été faites). Quand les champs sont bien complétés, on clique sur le bouton "Terminer" pour compléter l'opération. Si on appuie sur *Cancel*, la fonction retourne *NULL* qui est utilisé pour sauter la prise de mesure. Si on appuie sur *Terminer*, la fonction retourne "*OK*".\
         \
         ![](PickFromPlan_Opt2.PNG){#PickPlanOpt2}
+
+## playTwoSpectra.R
+
+1.  Appel de la fonction: ***plotSp(sp1, sp2 )***
+
+2.  Paramètres d'entrée:
+
+    -   *sp1, sp2* : matrices de spectre. Chaque matrice a 2 lignes: axe des x sur la première ligne et spectre sur la deuxième.
+
+3.  Sortie: Graphique
+
+4.  Détails: Utilitaire appelé par *ApplyModels.R* lorsque *debutPlot=TRUE*.
 
 ## Plots_2\_Shiny_MultiLevels.R
 
@@ -637,3 +752,17 @@ Le projet **PolySpecteuR** comprend plusieurs scripts **R** qu'on utilise dans u
       Clean_n_Close(list(lesInstruments))
     }
 :::
+
+\newpage
+
+# Annexe B {#annexe-b .unnumbered}
+
+## Utilisation du *"Folding"* dans RStudio pour faciliter la navigation dans les scripts {.unnumbered}
+
+Les scripts du projet ont été mis en forme pour faciliter la navigation dans le code. RStudio permet de découper le code en section avec un titre pour chaque section. L'utilisation de ces fonctionnalités va être illustré à l'aide du script *mainRaman_w\_Models.R*. Quand on ouvre le script dans RStudio, la fenêtre d'édition se présente comme suit:\
+\
+![](unFoldedScript.PNG)
+
+En haut à droite de la fenêtre d'édition, il y a une icône permettant d'afficher la structure du fichier. On retrouve aussi des puces permettant de cacher/montrer des sections du document juste à côté des numéros de ligne. Un triangle vers le bas indique que le code de cette section est apparent, un triangle vers le haut indique que le code n'est pas apparent. En utilisant l'option *Folding* du menu *Edit*, il est possible de tout cacher/ouvrir d'un coup. La figure plus bas montre le script avec la structure du document sur la droite et toutes les sections du code cachées à l'exception de celles qu'on doit éditer manuellement pour définir une session de prise de données. Ces sections à éditer sont identifiées avec la mention "OPTIONS - " dans l'entête de la section. Cette présentation permet de simplifier l'édition tout en évitant d'éditer les autres sections du script, ce qui est susceptible de générer des erreurs.\
+\
+![](Folded_4_OptionEditing.PNG)

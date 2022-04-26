@@ -20,6 +20,11 @@ mainRaman_w_Models <- function()
 # Noter que l'ordre dans cette liste définit l'ordre d'acquisition des 
 # données.
 #
+# Finalement, on doit modifier le groupe de lignes identifiées par
+# "OPTIONS - Choisir des modèles à appliquer aux données et les initialiser"
+# selon que l'on veuille ou non appliquer un ou des modèles aux nouvelles
+# données après chaque échantillon.
+#
 #*****************************************************************************
 # AUTEUR: Bernard Panneton, Agriculture et Agroalimentaire Canada
 # Février 2022
@@ -65,7 +70,7 @@ mainRaman_w_Models <- function()
   setwd("..")
   
   #********************************************************
-  ## Définir les instruments nécessaires et les initialiser ----
+  ## OPTIONS - Définir les instruments nécessaires et les initialiser ---- 
   #********************************************************
   
   R_Inst <- InitRamanSpecteuR()   #instrument pour Raman         #options
@@ -77,7 +82,7 @@ mainRaman_w_Models <- function()
   
   
   #********************************************************
-  ## Choisir des modèles à appliquer aux données et les initialiser ----
+  ## OPTIONS - Choisir des modèles à appliquer aux données et les initialiser ----
   # Enlever ce bloc ou le mettre en commentaire si pas de modèles
   #********************************************************
   modelEnv <- InitModels(lesInstruments)                         #options

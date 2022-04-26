@@ -1,0 +1,25 @@
+\contentsline {section}{\numberline {1}Introduction}{1}{section.1}% 
+\contentsline {section}{\numberline {2}Fonctionnement g\IeC {\'e}n\IeC {\'e}ral}{2}{section.2}% 
+\contentsline {section}{\numberline {3}Scripts R}{9}{section.3}% 
+\contentsline {subsection}{\numberline {3.1}Apply\_PreTreatments.R}{9}{subsection.3.1}% 
+\contentsline {subsection}{\numberline {3.2}ApplyModels.R}{9}{subsection.3.2}% 
+\contentsline {subsection}{\numberline {3.3}Clean\_n\_Close.R}{10}{subsection.3.3}% 
+\contentsline {subsection}{\numberline {3.4}Define\_Descrip.R}{10}{subsection.3.4}% 
+\contentsline {subsection}{\numberline {3.5}DoFluoSpecteuR.R}{10}{subsection.3.5}% 
+\contentsline {subsection}{\numberline {3.6}DoRamanSpecteuR.R}{11}{subsection.3.6}% 
+\contentsline {subsection}{\numberline {3.7}DoReflectSpecteuR.R}{11}{subsection.3.7}% 
+\contentsline {subsection}{\numberline {3.8}DoTransmitSpecteuR.R}{12}{subsection.3.8}% 
+\contentsline {subsection}{\numberline {3.9}GetPlanExp.R}{12}{subsection.3.9}% 
+\contentsline {subsection}{\numberline {3.10}InitFluoSpecteuR.R}{14}{subsection.3.10}% 
+\contentsline {subsection}{\numberline {3.11}InitRamanSpecteuR.R}{14}{subsection.3.11}% 
+\contentsline {subsection}{\numberline {3.12}InitReflectSpecteuR.R}{15}{subsection.3.12}% 
+\contentsline {subsection}{\numberline {3.13}InitTransmitSpecteuR.R}{15}{subsection.3.13}% 
+\contentsline {subsection}{\numberline {3.14}PickFromPlan.R}{16}{subsection.3.14}% 
+\contentsline {subsection}{\numberline {3.15}playTwoSpectra.R}{17}{subsection.3.15}% 
+\contentsline {subsection}{\numberline {3.16}Plots\_2\_Shiny\_MultiLevels.R}{17}{subsection.3.16}% 
+\contentsline {subsection}{\numberline {3.17}writeData.R}{19}{subsection.3.17}% 
+\contentsline {subsection}{\numberline {3.18}writeYFile.R}{20}{subsection.3.18}% 
+\contentsline {section}{Annexe A}{21}{section*.2}% 
+\contentsline {subsection}{Script d'acquisition avec 3 instruments pour la fluorescence, la transmittance et la r\IeC {\'e}flectance}{21}{section*.3}% 
+\contentsline {section}{Annexe B}{25}{section*.4}% 
+\contentsline {subsection}{Utilisation du \emph {``Folding''} dans RStudio pour faciliter la navigation dans les scripts}{25}{section*.5}% 
