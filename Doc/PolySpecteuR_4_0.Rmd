@@ -307,7 +307,7 @@ Le projet **PolySpecteuR** comprend plusieurs scripts **R** qu'on utilise dans u
 
 1.  Appel de la fonction: ***ApplyModels(Plan ,lesInstruments,\
     modelEnv, dataPath, dataSetID,\
-    plotMe=T, debugPlot=F, \
+    plotMe=T, debugPlot=F,\
     width=1000, height=600)***
 
 2.  Paramètres d'entrée:
