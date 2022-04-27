@@ -178,6 +178,7 @@ InitFluoSpecteuR<-function(){
   dum <- apply(dum,2,list)
   lesDels <- lapply(dum,function(x) as.list(unlist(x)))
   FluoEnv$lesDels <- lesDels
+  FluoEnv$listDepth <- 2
   par(op)
   return(FluoEnv)
 }  

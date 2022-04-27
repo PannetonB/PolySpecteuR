@@ -86,8 +86,9 @@ mainRaman_w_Models <- function()
   # Enlever ce bloc ou le mettre en commentaire si pas de modèles
   #********************************************************
   modelEnv <- InitModels(lesInstruments)                         #options
-  goOn <- utils::winDialog("yesno",                              #options
+  goOn <- "YES" == utils::winDialog("yesno",                     #options
                            "Continuer cette session?")           #options
+ 
   if (!goOn){                                                    #options
     return()                                                     #options
   }else                                                          #options

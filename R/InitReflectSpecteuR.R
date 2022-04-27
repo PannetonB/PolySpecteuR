@@ -202,7 +202,7 @@ InitReflectSpecteuR<-function(){
     graphics.off()
     return("ABANDON")
   }
-  
+  ReflectEnv$listDepth <- 1
   return(ReflectEnv)
 }  
 

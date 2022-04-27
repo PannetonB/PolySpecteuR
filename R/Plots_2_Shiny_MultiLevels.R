@@ -47,9 +47,14 @@ Plots_2_Shiny_MultiLevels <- function(Inst)
 #*******************************************************************************
 #*******************************************************************************  
 {
-    library(shiny)
-    library(miniUI)
-    library(keys)
+  lesPackages <- c("shiny","miniUI","keys")
+  dum <- lapply(lesPackages, function(pp){
+    ok <- require(pp, character.only = TRUE)
+    if (!(ok)){
+      install.packages(pp,dependencies = T, character.only = TRUE)
+      library(pp, character.only = TRUE)
+    } 
+  })
     
     #Stocke les paramètres graphiques par défaut.
     op <- par(no.readonly = TRUE)

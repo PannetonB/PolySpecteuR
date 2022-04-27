@@ -198,7 +198,7 @@ InitTransmitSpecteuR<-function(){
     return("ABANDON")
   }
   
-  
+  TransmitEnv$listDepth <- 1
   return(TransmitEnv)
 }  
 

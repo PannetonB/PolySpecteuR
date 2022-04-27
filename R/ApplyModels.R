@@ -1,14 +1,19 @@
 ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                         plotMe=T,debugPlot=F,
-                        width=1000, height=600)
+                        width=800, height=500)
 {
 
   #Charge librairies et fonctions----
-  library(ggplot2)
-  library(shiny)
-  library(miniUI)
-  library(pls)
   
+  lesPackages <- c("ggplot2","shiny","miniUI",
+                   "pls","keys")
+  dum <- lapply(lesPackages, function(pp){
+    ok <- require(pp, character.only = TRUE)
+    if (!(ok)){
+      install.packages(pp,dependencies = T, character.only = TRUE)
+      library(pp, character.only = TRUE)
+    } 
+  })
   
   source(file.path(here::here(),"R/Apply_PreTreatments.R"), encoding = 'UTF-8')
   source(file.path(here::here(),"R/playTwoSpectra.R"), encoding = 'UTF-8')
@@ -258,7 +263,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                ##### Graphiques----
                if (plotMe){
                  outfile <- tempfile(fileext = '.png')
-                 png(outfile, width = 1000, height = 700)
+                 png(outfile, width = width, height = height)
                  
                  nComp <- unModele$pls_ncomp
                  x=unModele$plsFit[[1]]$fitted.values[,,nComp] +  #valeurs du jeud
@@ -329,7 +334,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                  ##### Graphiques----
                  if (plotMe){
                    outfile <- tempfile(fileext = '.png')
-                   png(outfile, width = 1200, height = 700)
+                   png(outfile, width = width, height = height)
                   
                    toColor <- unModele$colorby
                    if (is.data.frame(toColor)) toColor <- as.factor(rep("Données",nrow(toColor)))
@@ -369,13 +374,13 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                           lwd = c(rep(0,nCl),0,2),
                           pt.bg=c(mescols_fill[1:nCl],"red",NA), 
                           pch=c(rep(21,nCl),21,NA), 
-                          pt.cex = c(rep(2,nCl),3), cex=2, bty="n")
+                          pt.cex = c(rep(2,nCl),3), cex=1.2, bty="n")
                    
                    text(0,1,paste0(modelName,"\nsur\n",
                                paste(instCombi,collapse=' et '),
                                "\n\n", names(preTreatData)[i],
                                "\n\nÉchantillon: ",echID),
-                         adj=c(0,1), cex=2, font=2)
+                         adj=c(0,1), cex=1.5, font=2)
                    
                    #ODist vs SDist 
                    #Calcul OD et SD pour l'échantillon
@@ -494,14 +499,15 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                levels(dum2$cl)=paste("True: ",levels(dum2$cl),sep="")
                if (plotMe){
                  outfile <- tempfile(fileext = '.png')
-                 png(outfile, width = 1200, height = 700)
+                 png(outfile, width = width, height = height)
                  
                  p<-ggplot2::ggplot(dum2,ggplot2::aes(Pred,Prob))
                  p<-p+ggplot2::geom_boxplot()
                  p<-p+geom_col(data=data.frame(cl=rep(paste0("PRÉDICTION - ",plsda_cl),nCl),
                                                  Pred=colnames(plsda_probs),
                                                  Prob=as.numeric(plsda_probs[1,])),
-                                 ggplot2::aes(Pred,Prob), colour=NA, fill="red")
+                                 ggplot2::aes(Pred,Prob, fill=Prob), colour=NA) +
+                   scale_fill_gradient(low = "darkred", high = "green", na.value = NA)
                  p<-p +ggplot2::facet_wrap(~cl)
                                            
                  p<-p + ggplot2::theme(text = element_text(size=20))

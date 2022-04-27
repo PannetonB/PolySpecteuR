@@ -44,7 +44,7 @@ PickFromPlan <- function(plan, monDelai = 1000)
       mylist <- plan$liste_ids
       leplan <- plan$leplan
       choix <- list()
-      if (ncol(leplan)>0) for (k in 2:ncol(leplan)) choix[[k]] <- unique(leplan[[k]])
+      if (ncol(leplan)>1) for (k in 2:ncol(leplan)) choix[[k]] <- unique(leplan[[k]])
       
 
       #  └ Interface shiny----
@@ -55,18 +55,20 @@ PickFromPlan <- function(plan, monDelai = 1000)
         miniContentPanel(
           #Boîte pour entre EchID
           textInput(mylist[1], label = mylist[1], value = ""),
-          #Première boîte de texte car aucun descripteur déjà entré.
-          if (length(choix)==0){
-            lapply(2:length(mylist),
-                   function(i)
-                     textInput(mylist[i], label = mylist[i]))
-          }else
-          #Quand des descripteurs ont déjà été entrés, menus déroulants  
-          #avec option pour permettre de créé une nouvelle entrée  
-          {
-            lapply(2:length(mylist), function(i) selectizeInput(mylist[i], label = mylist[i],
-                                                                choix[[i]],
-                                                                options = list(create = TRUE)))
+          if (length(mylist)>1){
+            #Première boîte de texte car aucun descripteur déjà entré.
+            if (length(choix)==0){
+              lapply(2:length(mylist),
+                     function(i)
+                       textInput(mylist[i], label = mylist[i]))
+            }else
+            #Quand des descripteurs ont déjà été entrés, menus déroulants  
+            #avec option pour permettre de créé une nouvelle entrée  
+            {
+              lapply(2:length(mylist), function(i) selectizeInput(mylist[i], label = mylist[i],
+                                                                  choix[[i]],
+                                                                  options = list(create = TRUE)))
+            }
           }
           
           #Affichage des 5 dernières entrées.
@@ -106,7 +108,7 @@ PickFromPlan <- function(plan, monDelai = 1000)
               curEchID <- paste0(curEchID,"_bis")
             outlist <- list(EchID = curEchID)
             for (elem in mylist[-1]) outlist[[elem]] <- isolate(input[[elem]])
-            stopApp(outlist)}
+            if (curEchID != "") stopApp(outlist)}
           if(input$cancel){
             stopApp(NULL)
           }

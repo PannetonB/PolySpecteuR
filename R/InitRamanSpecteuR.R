@@ -142,6 +142,7 @@ InitRamanSpecteuR<-function(){
   #****************************************************************************
   # Retourne un environnement en sortie----
   RamanEnv$type <- "Raman"
+  RamanEnv$listDepth <- 1
   return(RamanEnv)
   # END----
 }

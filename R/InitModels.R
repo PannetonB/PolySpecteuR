@@ -57,7 +57,7 @@ InitModels<-function(lesInstruments){
   #*****************************************************************************
   #Nomme les éléments de lesInstruments avec nomInstrument----
   nomsInstrument <- lapply(lesInstruments, function(inst) inst$nomInstrument)
-  names(lesInstruments) <- nomsInstrument 
+  names(lesInstruments) <<- nomsInstrument 
   
   
   
