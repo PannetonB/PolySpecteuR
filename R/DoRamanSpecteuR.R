@@ -70,13 +70,18 @@ DoRamanSpecteuR <- function(R_Inst,leplan,tuneParams=FALSE)
   
   cat("\n*********************\nAcquisition du Raman.\n")
   
+  
   # └ Spectre au noir----
+  mess <- paste0("RAMAN\nPlacer l'échantillon ",leplan$EchID, " à la position ", 1,".")
+  utils::winDialog("ok",mess)
+  
   cat(" - Spectre au noir\n")
   with(R_Inst, {Noir=Grab_f_QE(lespectro,OOobj,T_Raman*1000)})
   
+  
   #Allume le shutter du laser
   #UNCOMMENT
-  ShutterOn(1)
+  # ShutterOn(1)
   # R_Inst$Noir <- R_Inst$Noir[1:1044]
   # R_Inst$lespectro$xaxis <- R_Inst$lespectro$xaxis[1:1044]
   # R_Inst$lespectro$wn <- R_Inst$lespectro$wn[1:1044]
@@ -85,14 +90,23 @@ DoRamanSpecteuR <- function(R_Inst,leplan,tuneParams=FALSE)
   
   # └ Boucle sur les répétitions de positions----
   for (k in 1:R_Inst$posReps_Raman){
-    mess <- paste0("RAMAN\nPlacer l'échantillon ",leplan$EchID, "à la position ", k,".")
-    utils::winDialog("ok",mess)
+    
+    if (k>1){
+      mess <- paste0("RAMAN\nPlacer l'échantillon ",leplan$EchID, " à la position ", k,".")
+      utils::winDialog("ok",mess)
+    }
+    
+    cat("   - Activation du laser\n")
+    ShutterOn(1)
+    Sys.sleep(R_Inst$T_Laser)
     
     #  └ └   Prendre un spectre brut ----
     cat("   - Signal brut\n")
     with(R_Inst, {Signal=Grab_f_QE(lespectro,OOobj,T_Raman*1000)})
     
     #Coupe l'alimentation du shutter
+    cat("   - Ferme le laser\n")
+    ShutterOff(1)
     #UNCOMMENT
     # R_Inst$Signal <-  R_Inst$Signal[1:1044]
     #UNCOMMENT

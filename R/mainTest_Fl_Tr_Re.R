@@ -78,7 +78,7 @@ mainTest_Fl_Tr_Re <- function()
   T_Inst <- InitTransmitSpecteuR()                              #options
   if (is.character(T_Inst)) return( "ABANDON")                  #options
   
-  lesInstruments <- list(F_Inst, R_Inst, T_Inst)                #options
+  lesInstruments <<- list(F_Inst, R_Inst, T_Inst)                #options
 
   lestypes <- lapply(lesInstruments, function(I) I$type)
   

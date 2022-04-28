@@ -76,7 +76,7 @@ mainRaman_w_Models <- function()
   R_Inst <- InitRamanSpecteuR()   #instrument pour Raman         #options
   if (is.character(R_Inst)) return( "ABANDON")                   #options
   
-  lesInstruments <- list(R_Inst)                                 #options
+  lesInstruments <<- list(R_Inst)                                 #options
   
   lestypes <- lapply(lesInstruments, function(I) I$type)
   

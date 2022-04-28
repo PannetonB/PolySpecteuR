@@ -80,7 +80,7 @@ L'exemple dans la boîte de code plus bas illustre la démarche. Ce script perme
 
 La deuxième partie du script (\#*Phase d'acquisition de données*) est consacrée à l'acquisition, au calcul des modèles et au stockage des données. À chaque itération de la boucle *while*, on traite un échantillon: on choisit un échantillon, l'acquisition des spectres est lancée, les données sont validées par l'opérateur puis les données valides sont enregistrées et les modèles appliqués. Finalement, l'opérateur choisit d'interrompre ou pas la séquence d'acquisition. La dernière partie du script (\#*Nettoyage et arrêt du script*) permet de terminer la session. Pour construire un nouveau protocole d'acquisition, l'opérateur n'a qu'à modifier les lignes de codes identifiées par "\#*options"*. Tout le reste du script d'acquisition reste inchangé. Une méthode facilitant l'édition de scripts en mettant l'accent sur les parties où se trouvent les "*\#options*" est décrite à l'[Annexe B](#annexe-b).
 
-Avec ce schéma d'acquisition, la priorité va aux échantillons dans le sens que pour un échantillon donné, on procède à toutes les mesures en séquence puis on passe à un autre échantillon. D'autres exemples des scripts sont donnés à l'[Annexe A](#annexe-a).
+Avec ce schéma d'acquisition, la priorité va aux échantillons dans le sens que pour un échantillon donné, on procède à toutes les mesures en séquence puis on passe à un autre échantillon. D'autres exemples des scripts sont donnés à l'[Annexe A](#annexe-a). On trouve aussi 2 modèles dans le répertoire *Doc* du projet dans le fichier *Inst_n\_Param_FileTemplates.zip*.
 
 \newpage
 
@@ -164,7 +164,7 @@ mainRaman_w_Models <- function()
   R_Inst <- InitRamanSpecteuR()   #instrument pour Raman         #options
   if (is.character(R_Inst)) return( "ABANDON")                   #options
   
-  lesInstruments <- list(R_Inst)                                 #options
+  lesInstruments <<- list(R_Inst)                                 #options
   
   lestypes <- lapply(lesInstruments, function(I) I$type)
   
@@ -284,6 +284,10 @@ mainRaman_w_Models <- function()
 :::
 
 \newpage
+
+# Fichiers d'instrument et de paramètres
+
+Le fonctionnement des instruments est basé sur des informations inscrites dans les fichiers de configuration d'instrument qui sont dans le répertoire *Fichiers_Instruments* du projet ou ailleurs selon le choix de l'utilisateur. Il en va de même pour les fichiers de paramètres d'acquisition qui définissent un protocole de saisie de données spécifique. Ces fichiers de paramètres sont dans le répertoire *Fichiers_Parametres* ou ailleurs. Il est important de bien respecter le format de ces fichiers et en particulier de s'assurer que tous les noms de variables qui y sont définies restent les mêmes. Ces noms sont juste à gauche du "=" ou du "\<-" dans ces fichiers. Pour conserver des versions de référence, des fichiers d'instruments et de paramètres pour les 4 types (fluorescence, Raman, transmittance et réflectance) sont inclus dans le répertoire *Doc* du projet dans le fichier *Inst_n\_Param_FileTemplates.zip*.
 
 # Scripts R
 
@@ -668,7 +672,7 @@ Le projet **PolySpecteuR** comprend plusieurs scripts **R** qu'on utilise dans u
       T_Inst <- InitTransmitSpecteuR()                              #options
       if (is.character(T_Inst)) return( "ABANDON")                  #options
       
-      lesInstruments <- list(F_Inst, R_Inst, T_Inst)                #options
+      lesInstruments <<- list(F_Inst, R_Inst, T_Inst)                #options
 
       lestypes <- lapply(lesInstruments, function(I) I$type)
       
