@@ -324,18 +324,29 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
              },
              #### PCA----
              PCA = {
-               iind=as.list(1:length(preTreatData))
-               acp_pred <- lapply(iind, function(i){
-                 newdats <- as.data.frame(t(preTreatData[[i]][2,]))
-                 colnames(newdats) <- dimnames(unModele$lesACPs[[i]]$rotation)[[1]]
-                 lesPreds <- predict(unModele$lesACPs[[i]],newdats)
-                
+               #Vérifier si le modèle vient de ShInSpectoR
+               fromShInSpectoR <- "source" %in% names(unModele$model_descript)
+               ###### Modèle de ShInSpectoR ----
+               if (fromShInSpectoR){
+                 for (dtype in unModele$model_descript$datatype){
+                   idtype <- which(dtype==unModele$model_descript$datatype)
+                   spdf<-as.data.frame(t(preTreatData[[dtype]][2,]))
+                   colnames(spdf)<-paste(dtype,as.character(preTreatData[[dtype]][1,]),sep="_")
+                   if (idtype==1){
+                     y <- spdf
+                   }else
+                   {
+                     y <- cbind(y,spdf)
+                   }
+                 }
+                 pca_set <- y
                  
-                 ##### Graphiques----
+                 lesPreds <- predict(unModele$lePCA,pca_set)
+                 ####### Graphiques----
                  if (plotMe){
                    outfile <- tempfile(fileext = '.png')
                    png(outfile, width = width, height = height)
-                  
+                   
                    toColor <- unModele$colorby
                    if (is.data.frame(toColor)) toColor <- as.factor(rep("Données",nrow(toColor)))
                    
@@ -348,7 +359,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                    mescols_fill=rep(mescols_fill,recycling)
                    
                    par(mfrow=c(2,2))
-                   lesScores <- unModele$lesACPs[[i]]$x
+                   lesScores <- unModele$lePCA$x
                    
                    for (k in seq(1,4,2)){
                      xLimits <- extendrange(c(lesScores[,k],lesPreds[k]))
@@ -377,27 +388,28 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                           pt.cex = c(rep(2,nCl),3), cex=1.2, bty="n")
                    
                    text(0,1,paste0(modelName,"\nsur\n",
-                               paste(instCombi,collapse=' et '),
-                               "\n\n", names(preTreatData)[i],
-                               "\n\nÉchantillon: ",echID),
-                         adj=c(0,1), cex=1.5, font=2)
+                                   paste(instCombi,collapse=' et '),
+                                   "\n", 
+                                   paste(names(preTreatData), collapse = ' et '),
+                                   "\n\nÉchantillon: ",echID),
+                        adj=c(0,1), cex=1.2, font=2)
                    
                    #ODist vs SDist 
                    #Calcul OD et SD pour l'échantillon
                    #Voir manuel de PLS Toolbox de EigenVector dans Doc du projet
-                   scs <- lesPreds[1,1:unModele$lesNCPs[[i]],drop=F]
-                   eigVals <- unModele$lesACPs[[i]]$sdev[1:unModele$lesNCPs[[i]]] 
+                   scs <- lesPreds[1,1:unModele$NCPs,drop=F]
+                   eigVals <- unModele$lePCA$sdev[1:unModele$NCPs] 
                    midMat <- diag(1/eigVals^2)
                    SD <- sqrt(scs %*% midMat %*% t(scs))
                    
-                   x <- as.matrix(newdats-unModele$lesACPs[[i]]$center)
-                   lds <- unModele$lesACPs[[i]]$rotation[,1:unModele$lesNCPs[[i]],drop=F]
+                   x <- as.matrix(pca_set-unModele$lePCA$center)
+                   lds <- unModele$lePCA$rotation[,1:unModele$NCPs,drop=F]
                    midMat <- diag(nrow=dim(x)[2]) - lds %*% t(lds)
                    OD <- sqrt(x %*% midMat %*% t(x))
                    
-                   xLimits <- extendrange(c(unModele$dds[[i]]$SDist,SD))
-                   yLimits <- extendrange(c(unModele$dds[[i]]$ODist,OD))
-                   plot(unModele$dds[[i]]$SDist,unModele$dds[[i]]$ODist, pch = 21, cex=1.5,
+                   xLimits <- extendrange(c(unModele$dds$SDist,SD))
+                   yLimits <- extendrange(c(unModele$dds$ODist,OD))
+                   plot(unModele$dds$SDist,unModele$dds$ODist, pch = 21, cex=1.5,
                         xlim = xLimits,
                         ylim = yLimits,
                         col = "black", bg=mescols_fill[toColor],
@@ -405,26 +417,133 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                         ylab = toupper("Distance résiduelle"),
                         cex.lab=1.5, cex.axis=1.5)
                    points(SD,OD,col="white", bg="red", cex=2.5, pch=21)
-                   abline(h=unModele$dds[[i]]$critOD, v=unModele$dds[[i]]$critSD,
+                   abline(h=unModele$dds$critOD, v=unModele$dds$critSD,
                           col="red",lwd=2,lty=2)
                    
                    dev.off()
                    
                    
                    nggs <- length(lesplots)
-                   lesplots[[paste0("ACP ",nggs+1)]] <<- #<<- because lapply!
+                   lesplots[[paste0("ACP ",nggs+1)]] <- 
                      list(src = outfile,
                           contentType = 'image/png',
                           width = width,
                           height = height,
                           alt = paste0(modelName," sur ",
                                        paste(instCombi,collapse=' et '),
-                                       " - ",names(preTreatData)[i])
+                                       " - ",
+                                       paste(names(preTreatData), collapse = ' et ')
+                          )
                      )
                    
                    par(mfrow=c(1,1))
                  }
-               })
+               }else
+                 
+                 #### Modèle de InSpectoR ----  
+               {
+                 iind=as.list(1:length(preTreatData))
+                 acp_pred <- lapply(iind, function(i){
+                   newdats <- as.data.frame(t(preTreatData[[i]][2,]))
+                   colnames(newdats) <- dimnames(unModele$lesACPs[[i]]$rotation)[[1]]
+                   lesPreds <- predict(unModele$lesACPs[[i]],newdats)
+                  
+                   
+                   ####### Graphiques----
+                   if (plotMe){
+                     outfile <- tempfile(fileext = '.png')
+                     png(outfile, width = width, height = height)
+                    
+                     toColor <- unModele$colorby
+                     if (is.data.frame(toColor)) toColor <- as.factor(rep("Données",nrow(toColor)))
+                     
+                     mescols=c("darkred","blue","green3","salmon","yellow3","black","red3","magenta","gray70","cyan") 
+                     #To define corresponding lighter transparent colors for symbol fill
+                     mescols_fill=col2rgb(mescols,alpha=TRUE)
+                     mescols_fill[4,]=145
+                     mescols_fill=rgb(mescols_fill[1,],mescols_fill[2,],mescols_fill[3,],alpha=mescols_fill[4,],maxColorValue = 255)
+                     recycling=ceiling(length(unique(toColor))/10)  #Only 10 colors defined, so we recycle if necessary
+                     mescols_fill=rep(mescols_fill,recycling)
+                     
+                     par(mfrow=c(2,2))
+                     lesScores <- unModele$lesACPs[[i]]$x
+                     
+                     for (k in seq(1,4,2)){
+                       xLimits <- extendrange(c(lesScores[,k],lesPreds[k]))
+                       yLimits <- extendrange(c(lesScores[,(k+1)],lesPreds[k+1]))
+                       plot(lesScores[,k],lesScores[,(k+1)], pch = 21, cex=2,
+                            xlim = xLimits,
+                            ylim = yLimits,
+                            col = "black", bg=mescols_fill[toColor],
+                            xlab=paste0("PC",k), ylab = paste0("PC",(k+1)),
+                            cex.lab=1.5, cex.axis=1.5)
+                       points(lesPreds[k],lesPreds[k+1]
+                              ,col="white", bg="red", cex=3, pch=21)
+                       abline(v=0,h=0,col="gray80",lty=3)
+                     }
+                     #TITRE et LÉGENDE
+                     plot.new()
+                     classes <- levels(toColor)
+                     nCl <- length(classes)
+                     legend("bottomright",legend=c(classes,"Prédiction","Limites"),
+                            inset=c(0.1,0),
+                            col=c(rep("black",nCl),"white","red"),
+                            lty = c(rep(0,nCl),0,2),
+                            lwd = c(rep(0,nCl),0,2),
+                            pt.bg=c(mescols_fill[1:nCl],"red",NA), 
+                            pch=c(rep(21,nCl),21,NA), 
+                            pt.cex = c(rep(2,nCl),3), cex=1.2, bty="n")
+                     
+                     text(0,1,paste0(modelName,"\nsur\n",
+                                 paste(instCombi,collapse=' et '),
+                                 "\n\n", names(preTreatData)[i],
+                                 "\n\nÉchantillon: ",echID),
+                           adj=c(0,1), cex=1.5, font=2)
+                     
+                     #ODist vs SDist 
+                     #Calcul OD et SD pour l'échantillon
+                     #Voir manuel de PLS Toolbox de EigenVector dans Doc du projet
+                     scs <- lesPreds[1,1:unModele$lesNCPs[[i]],drop=F]
+                     eigVals <- unModele$lesACPs[[i]]$sdev[1:unModele$lesNCPs[[i]]] 
+                     midMat <- diag(1/eigVals^2)
+                     SD <- sqrt(scs %*% midMat %*% t(scs))
+                     
+                     x <- as.matrix(newdats-unModele$lesACPs[[i]]$center)
+                     lds <- unModele$lesACPs[[i]]$rotation[,1:unModele$lesNCPs[[i]],drop=F]
+                     midMat <- diag(nrow=dim(x)[2]) - lds %*% t(lds)
+                     OD <- sqrt(x %*% midMat %*% t(x))
+                     
+                     xLimits <- extendrange(c(unModele$dds[[i]]$SDist,SD))
+                     yLimits <- extendrange(c(unModele$dds[[i]]$ODist,OD))
+                     plot(unModele$dds[[i]]$SDist,unModele$dds[[i]]$ODist, pch = 21, cex=1.5,
+                          xlim = xLimits,
+                          ylim = yLimits,
+                          col = "black", bg=mescols_fill[toColor],
+                          xlab=toupper("Distance dans le modèle"),
+                          ylab = toupper("Distance résiduelle"),
+                          cex.lab=1.5, cex.axis=1.5)
+                     points(SD,OD,col="white", bg="red", cex=2.5, pch=21)
+                     abline(h=unModele$dds[[i]]$critOD, v=unModele$dds[[i]]$critSD,
+                            col="red",lwd=2,lty=2)
+                     
+                     dev.off()
+                     
+                     
+                     nggs <- length(lesplots)
+                     lesplots[[paste0("ACP ",nggs+1)]] <<- #<<- because lapply!
+                       list(src = outfile,
+                            contentType = 'image/png',
+                            width = width,
+                            height = height,
+                            alt = paste0(modelName," sur ",
+                                         paste(instCombi,collapse=' et '),
+                                         " - ",names(preTreatData)[i])
+                       )
+                     
+                     par(mfrow=c(1,1))
+                   }
+                 })
+               }
                
              },
              #### PLSDA----
