@@ -87,8 +87,8 @@ InitModels<-function(lesInstruments){
   )
   server = function(input,output,session){
     
-    #permettre des fichiers de 60 MB et moins
-    options(shiny.maxRequestSize=100*1024^2) 
+    #permettre des fichiers de 300 MB et moins
+    options(shiny.maxRequestSize=300*1024^2) 
     
     output$titre = renderText("<b>Nom des modèles")
     #A chaque fois que l'utilisateur appuie sur le bouton "Ajouter un champ",
