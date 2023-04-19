@@ -103,9 +103,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
         if (is.null(mydata))
           predict(plsdaFit[[ii]]$finalModel, newdata=plsdaFit[[ii]]$trainingData[,-1], type="prob")
         else
-          predict(plsdaFit[[ii]]$finalModel, newdata=mydata[[ii]][,-1], type="prob")
+          predict(plsdaFit[[ii]]$finalModel, newdata=mydata[[ii]], type="prob")
       })
-      Ps<-lapply(Ps,drop)  #remove useless third dimension.
+      Ps<-lapply(Ps,abind::adrop,drop=c(F,F,T))  #remove useless third dimension.
       pooled <- Ps[[1]] * NA 
       n <- nrow(pooled) 
       classes <- colnames(pooled) 
@@ -564,7 +564,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                  plsda_set <- list(y)
                }else
                {
-                 ind_lesX_list<-as.list(seq_len(length(model_descript$datatype)))
+                 ind_lesX_list<-as.list(seq_len(length(unModele$model_descript$datatype)))
                  plsda_set <- list()
                  for (dtype in unModele$model_descript$datatype){
                    idtype <- which(dtype==unModele$model_descript$datatype)
