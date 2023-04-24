@@ -125,12 +125,13 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
     }else  #only one model - no aggregation.
     {
       if (is.null(mydata)){
-        val_pred_cl <- predict(plsdaFit[[1]],newdata=plsdaFit[[1]]$trainingData[,-1]
+        val_pred_cl <- predict(plsdaFit[[1]]$finalModel,newdata=plsdaFit[[1]]$trainingData[,-1]
                                , type="prob")
       }else
       {
-        val_pred_cl <- predict(plsdaFit[[1]],newdata=mydata[[1]], type="prob")
+        val_pred_cl <- predict(plsdaFit[[1]]$finalModel,newdata=mydata[[1]], type="prob")
       }
+      val_pred_cl<-abind::adrop(val_pred_cl,drop=c(F,F,T))  #remove useless third dimension.
       classes<-colnames(val_pred_cl)
       if (!probs)
         val_pred_cl <- factor(classes[apply(val_pred_cl, 1, which.max)], levels = classes) 
