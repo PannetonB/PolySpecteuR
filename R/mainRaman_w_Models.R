@@ -194,7 +194,7 @@ mainRaman_w_Models <- function()
     
     ###Option de continuer ou quitter ----
     sel <- select.list(c("Oui","Non"), preselect = "Oui", 
-          title="CONTINUER?",graphics = T)
+          title="CONTINUER?",graphics = F)
     goOn <- ifelse(sel=="Oui",TRUE,FALSE)
   }        #Fin de la boucle sur les échantillons
   
