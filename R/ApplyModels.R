@@ -18,6 +18,55 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
   source(file.path(here::here(),"R/Apply_PreTreatments.R"), encoding = 'UTF-8')
   source(file.path(here::here(),"R/playTwoSpectra.R"), encoding = 'UTF-8')
   
+  
+  #*************************************************************************
+  #merge_png_2_pdf
+  #*************************************************************************
+  merge_png_2_pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
+    
+    #### Package Install ####
+    pngPackageExists <- require ("png")
+    if ( !pngPackageExists ) {
+      install.packages ("png")
+      library ("png")
+      
+    }
+    
+    ok <- require("grid")
+    if (!ok) {
+      install.packages('grid')
+      library("grid")
+    }
+    
+    #########################
+    
+    pdf(pdfFile,paper= "USr",width=9.5,height = 7)
+    
+    n <- length(pngFiles)
+    
+    for( i in 1:n) {
+      
+      pngFile <- pngFiles[i]
+      
+      pngRaster <- readPNG(pngFile)
+      
+      grid.raster(pngRaster, width=unit(0.9, "npc"), 
+                  height= unit(0.75, "npc"))
+      
+      if (i < n) plot.new()
+      
+    }
+    
+    dev.off()
+    
+    if (deletePngFiles) {
+      
+      unlink(pngFiles)
+    }
+    
+  }
+  
+  
   #*************************************************************************
   #PlotAll
   #*************************************************************************
@@ -57,12 +106,15 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
       })
       
       observeEvent(input$export,{
-        whichPlot <- which(input$modelselect==unlist(modelNames))
-        unPath <- utils::choose.files(default = "",
+        # whichPlot <- which(input$modelselect==unlist(modelNames))
+        unPath <- utils::choose.files(default = paste0("resMod_EchID_",echID),
                       caption = "Choisir un nom de fichier",
-                      multi = F, filters = Filters[c("png"),])
-        file.copy(from=lesplots[[whichPlot]]$src,
-                  to=unPath, overwrite=T)
+                      multi = F, filters = Filters[c("pdf"),])
+        pngFiles <- lapply(lesplots, function(p) p$src)
+        pngFiles <- unlist(pngFiles)
+        merge_png_2_pdf(unPath, pngFiles, deletePngFiles=FALSE)
+        #file.copy(from=lesplots[[whichPlot]]$src,
+                  # to=unPath, overwrite=T)
       })
       
       observeEvent(input$done,{
@@ -263,7 +315,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                
                ##### Graphiques----
                if (plotMe){
-                 outfile <- tempfile(fileext = '.png')
+                 nggs <- length(lesplots)
+                 fPattern <- paste0("Plot",sprintf("%02d", nggs+1))
+                 outfile <- tempfile(pattern=fPattern,fileext = '.png')
                  png(outfile, width = width, height = height)
                  
                  nComp <- unModele$pls_ncomp
@@ -310,7 +364,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                         )
                  dev.off()
                  
-                 nggs <- length(lesplots)
+                 
                  lesplots[[paste0("PLS ",nggs+1)]] <- 
                    list(src = outfile,
                         contentType = 'image/png',
@@ -345,7 +399,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                  lesPreds <- predict(unModele$lePCA,pca_set)
                  ####### Graphiques----
                  if (plotMe){
-                   outfile <- tempfile(fileext = '.png')
+                   nggs <- length(lesplots)
+                   fPattern <- paste0("Plot",sprintf("%02d", nggs+1))
+                   outfile <- tempfile(pattern=fPattern, fileext = '.png')
                    png(outfile, width = width, height = height)
                    
                    toColor <- unModele$colorby
@@ -452,9 +508,11 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                    
                    ####### Graphiques----
                    if (plotMe){
-                     outfile <- tempfile(fileext = '.png')
+                     nggs <- length(lesplots)
+                     fPattern <- paste0("Plot",sprintf("%02d", nggs+1))
+                     outfile <- tempfile(pattern=fPattern, fileext = '.png')
                      png(outfile, width = width, height = height)
-                    
+                     
                      toColor <- unModele$colorby
                      if (is.data.frame(toColor)) toColor <- as.factor(rep("Données",nrow(toColor)))
                      
@@ -618,7 +676,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                dum2<-tidyr::gather(dum1,Pred,Prob,-cl,factor_key = TRUE)
                levels(dum2$cl)=paste("True: ",levels(dum2$cl),sep="")
                if (plotMe){
-                 outfile <- tempfile(fileext = '.png')
+                 nggs <- length(lesplots)
+                 fPattern <- paste0("Plot",sprintf("%02d", nggs+1))
+                 outfile <- tempfile(pattern=fPattern, fileext = '.png')
                  png(outfile, width = width, height = height)
                  
                  p<-ggplot2::ggplot(dum2,ggplot2::aes(Pred,Prob))
