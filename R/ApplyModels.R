@@ -494,10 +494,42 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                      )
                    
                    par(mfrow=c(1,1))
+                   ##### Sortie fichier----
+                   leDir <- file.path(dataPath,"resModel")
+                   if (!dir.exists(leDir)) dir.create(leDir)
+                   fname <- file.path(leDir,paste0(modelName,"_",paste(instCombi,collapse='_'),".txt"))
+                   #Création d'une ligne pour écrire dans le fichier.
+                   ligne=NULL
+                   #Date et heure pour insérer dans le fichier
+                   ladate=as.character(Sys.Date())
+                   letemps=format(Sys.time(),"%X")
+                   
+                   ncol=dim(Plan$leplan)[2]
+                   for (i in 1:ncol){
+                     ligne=c(ligne,as.character(Plan$leplan[Plan$selected,i]))
+                   }
+                   ligne=c(ligne,ladate,letemps,as.character(signif(lesPreds[1:unModele$NCPs],4)))
+                   ligne=c(ligne,signif(c(SD,OD),4))
+                   if (file.exists(fname)) {  #append
+                     mycon=file(fname,"a")
+                     cat(ligne,file=mycon,sep="\t")
+                     cat("\n",file=mycon)
+                     close(mycon)
+                   }else
+                   {
+                     entete=c(names(Plan$leplan),"Date","Heure",
+                              paste0("PC",1:unModele$NCPs),"SD","OD")
+                     mycon=file(fname,"a")   
+                     cat(entete,file=mycon,sep="\t")   #entête
+                     cat("\n",file=mycon)
+                     cat(ligne,file=mycon,sep="\t") #données
+                     cat("\n",file=mycon)
+                     close(mycon)
+                   }
                  }
                }else
                  
-                 #### Modèle de InSpectoR ----  
+               #### Modèle de InSpectoR ----  
                {
                  iind=as.list(1:length(preTreatData))
                  acp_pred <- lapply(iind, function(i){
@@ -601,9 +633,42 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                      
                      par(mfrow=c(1,1))
                    }
+                   ##### Sortie fichier----
+                   leDir <- file.path(dataPath,"resModel")
+                   if (!dir.exists(leDir)) dir.create(leDir)
+                   fname <- file.path(leDir,paste0(modelName,"_",
+                                                   unModele$model_descript$datatype[i],"_",
+                                                   paste(instCombi,collapse='_'),".txt"))
+                   #Création d'une ligne pour écrire dans le fichier.
+                   ligne=NULL
+                   #Date et heure pour insérer dans le fichier
+                   ladate=as.character(Sys.Date())
+                   letemps=format(Sys.time(),"%X")
+                   
+                   ncol=dim(Plan$leplan)[2]
+                   for (i in 1:ncol){
+                     ligne=c(ligne,as.character(Plan$leplan[Plan$selected,i]))
+                   }
+                   ligne=c(ligne,ladate,letemps,as.character(signif(lesPreds[1:unModele$lesNCPs[[i]]],4)))
+                   ligne=c(ligne,signif(c(SD,OD),4))
+                   if (file.exists(fname)) {  #append
+                     mycon=file(fname,"a")
+                     cat(ligne,file=mycon,sep="\t")
+                     cat("\n",file=mycon)
+                     close(mycon)
+                   }else
+                   {
+                     entete=c(names(Plan$leplan),"Date","Heure",
+                              paste0("PC",1:unModele$lesNCPs[[i]]),"SD","OD")
+                     mycon=file(fname,"a")   
+                     cat(entete,file=mycon,sep="\t")   #entête
+                     cat("\n",file=mycon)
+                     cat(ligne,file=mycon,sep="\t") #données
+                     cat("\n",file=mycon)
+                     close(mycon)
+                   }
                  })
-               }
-               
+              }
              },
              #### PLSDA----
              PLSDA = {
