@@ -95,6 +95,10 @@ InitReflectSpecteuR<-function(){
     with(ReflectEnv,{ 
          lespectro <- Define_Spectro(OOobj,lespectro)
          SetCorrections(OOobj,lespectro,Lin = 1, Dark = 0)
+         if (HighGainMode){
+           lespectro=GetHighGain(lespectro,OOobj$mywrap)
+           SetHighGain(lespectro,OOobj$mywrap,highGainMode)
+         }
          lespectro <- Define_WavelengthRange(
               lespectro,reflect_l_min,reflect_l_max,reflect_step
            )

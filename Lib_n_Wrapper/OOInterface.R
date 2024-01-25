@@ -567,6 +567,46 @@ WarmSpectro <- function(leSpectro, mywrap) {
 #*****************************************************************************
 
 #*****************************************************************************
+# GetHighGain définit un objet pour le contrôle du gain 
+#
+# ENTRÉES
+#             leSpectro   :   liste créée par Define_Spectro
+#
+# SORTIES
+#             leSpectro auquel le HighGain est ajouté dans la liste. HighGain
+#             est un objet pour accéder aux fonctions associées au contrôle du
+#             gain élevé. Si cette option n'est pas disponible pour le spectro,
+#             ça retourne NULL.
+#*****************************************************************************
+GetHighGain <- function(leSpectro, mywrap) {
+  leSpectro$HighGain <-
+    mywrap$getFeatureControllerHighGainMode(as.integer(leSpectro$number))
+  Sys.sleep(0.2)
+  return(leSpectro)
+}
+
+#*****************************************************************************
+
+#*****************************************************************************
+# SetHighGain 
+#
+# ENTRÉES
+#             leSpectro   :   liste créée par Define_Spectro
+#
+# SORTIES
+#            Aucune. Initie le gain élevé si disponible
+#********************************************
+SetHighGain <- function(leSpectro, mywrap, leGain) {
+  HG <- leSpectro$HighGain
+  if (!is.null(HG))
+    HG$setHighGain(leGain)
+  Sys.sleep(0.2)
+  return(NULL)
+}
+
+#*****************************************************************************
+
+#*****************************************************************************
 # Quit_OO détruit la liste créée par Start_OO()
 #
 # ENTRÉES

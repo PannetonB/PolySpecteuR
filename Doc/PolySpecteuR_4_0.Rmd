@@ -48,7 +48,7 @@ Ce document décrit de façon sommaire l'architecture de **PolySpecteuR 4.0.** L
 
 -   des fichiers décrivant des plans d'expérience (séquences d'échantillon à analyser) dans le sous-répertoire *Plan_Exp*,
 
--   différentes librairies (dll, script R, ....) dans le sous-répertoire *Lib_n\_wrapper*,
+-   différentes librairies (dll, script R, ....) dans le sous-répertoire *Lib_n_wrapper*,
 
 -   des notes de travail dans le sous-répertoire *Notes*,
 
@@ -78,9 +78,9 @@ Dans **PolySpecteuR 4.0**, ces éléments sont mis en œuvre à l'aide de script
 
 L'exemple dans la boîte de code plus bas illustre la démarche. Ce script permet l'acquisition de données de diffusion Raman sur un instrument. Un ou des modèles peuvent être appliqué(s) aux nouvelles données. Dans la première partie du script (\#*Initialisation*), on charge des *packages R* et tous les scripts de la suite **PolySpecteuR**, l'initialisation des instruments est lancée, le choix de modèles est fait, un plan d'expérience est chargé et on définit un nom permettant l'identification du jeu de données. Ce nom permet de lier les fichiers de descripteurs des échantillons (fichiers Y) et les différents fichiers de données spectroscopiques, un fichier par type de mesure. Cette première partie se termine en demandant à l'usager s'il veut modifier les paramètres d'acquisition à chaque itération, ce qui est utile en phase de rodage de protocoles de prise de données.
 
-La deuxième partie du script (\#*Phase d'acquisition de données*) est consacrée à l'acquisition, au calcul des modèles et au stockage des données. À chaque itération de la boucle *while*, on traite un échantillon: on choisit un échantillon, l'acquisition des spectres est lancée, les données sont validées par l'opérateur puis les données valides sont enregistrées et les modèles appliqués. Finalement, l'opérateur choisit d'interrompre ou pas la séquence d'acquisition. La dernière partie du script (\#*Nettoyage et arrêt du script*) permet de terminer la session. Pour construire un nouveau protocole d'acquisition, l'opérateur n'a qu'à modifier les lignes de codes identifiées par "\#*options"*. Tout le reste du script d'acquisition reste inchangé. Une méthode facilitant l'édition de scripts en mettant l'accent sur les parties où se trouvent les "*\#options*" est décrite à l'[Annexe B](#annexe-b).
+La deuxième partie du script (\#*Phase d'acquisition de données*) est consacrée à l'acquisition, au calcul des modèles et au stockage des données. À chaque itération de la boucle *while*, on traite un échantillon: on choisit un échantillon, l'acquisition des spectres est lancée, les données sont validées par l'opérateur puis les données valides sont enregistrées et les modèles appliqués. Finalement, l'opérateur choisit d'interrompre ou pas la séquence d'acquisition. La dernière partie du script (\#*Nettoyage et arrêt du script*) permet de terminer la session. Pour construire un nouveau protocole d'acquisition, l'opérateur n'a qu'à modifier les lignes de codes identifiées par "\#*options"*. Tout le reste du script d'acquisition reste inchangé. Une méthode facilitant l'édition de scripts en mettant l'accent sur les parties où se trouvent les"*#options*" est décrite à l'[Annexe B](#annexe-b).
 
-Avec ce schéma d'acquisition, la priorité va aux échantillons dans le sens que pour un échantillon donné, on procède à toutes les mesures en séquence puis on passe à un autre échantillon. D'autres exemples des scripts sont donnés à l'[Annexe A](#annexe-a). On trouve aussi 2 modèles dans le répertoire *Doc* du projet dans le fichier *Inst_n\_Param_FileTemplates.zip*.
+Avec ce schéma d'acquisition, la priorité va aux échantillons dans le sens que pour un échantillon donné, on procède à toutes les mesures en séquence puis on passe à un autre échantillon. D'autres exemples des scripts sont donnés à l'[Annexe A](#annexe-a). On trouve aussi 2 modèles dans le répertoire *Doc* du projet dans le fichier *Inst_n_Param_FileTemplates.zip*.
 
 \newpage
 
@@ -287,7 +287,7 @@ mainRaman_w_Models <- function()
 
 # Fichiers d'instrument et de paramètres
 
-Le fonctionnement des instruments est basé sur des informations inscrites dans les fichiers de configuration d'instrument qui sont dans le répertoire *Fichiers_Instruments* du projet ou ailleurs selon le choix de l'utilisateur. Il en va de même pour les fichiers de paramètres d'acquisition qui définissent un protocole de saisie de données spécifique. Ces fichiers de paramètres sont dans le répertoire *Fichiers_Parametres* ou ailleurs. Il est important de bien respecter le format de ces fichiers et en particulier de s'assurer que tous les noms de variables qui y sont définies restent les mêmes. Ces noms sont juste à gauche du "=" ou du "\<-" dans ces fichiers. Pour conserver des versions de référence, des fichiers d'instruments et de paramètres pour les 4 types (fluorescence, Raman, transmittance et réflectance) sont inclus dans le répertoire *Doc* du projet dans le fichier *Inst_n\_Param_FileTemplates.zip*.
+Le fonctionnement des instruments est basé sur des informations inscrites dans les fichiers de configuration d'instrument qui sont dans le répertoire *Fichiers_Instruments* du projet ou ailleurs selon le choix de l'utilisateur. Il en va de même pour les fichiers de paramètres d'acquisition qui définissent un protocole de saisie de données spécifique. Ces fichiers de paramètres sont dans le répertoire *Fichiers_Parametres* ou ailleurs. Il est important de bien respecter le format de ces fichiers et en particulier de s'assurer que tous les noms de variables qui y sont définies restent les mêmes. Ces noms sont juste à gauche du "=" ou du "\<-" dans ces fichiers. Pour conserver des versions de référence, des fichiers d'instruments et de paramètres pour les 4 types (fluorescence, Raman, transmittance et réflectance) sont inclus dans le répertoire *Doc* du projet dans le fichier *Inst_n_Param_FileTemplates.zip*.
 
 # Scripts R
 
@@ -327,9 +327,9 @@ Le projet **PolySpecteuR** comprend plusieurs scripts **R** qu'on utilise dans u
 
 3.  Sortie: graphiques pouvant être enregistrés comme image au besoin. Des fichiers contenant les identificateurs des échantillons et les résultats du calcul des modèles dans les cas de la PLS et PLSDA.
 
-## Clean_n\_Close.R
+## Clean_n_Close.R
 
-1.  Appel de la fonction: ***Clean_n\_Close(lesInstr)***
+1.  Appel de la fonction: ***Clean_n_Close(lesInstr)***
 
 2.  Paramètres d'entrée:
 
@@ -535,9 +535,9 @@ Le projet **PolySpecteuR** comprend plusieurs scripts **R** qu'on utilise dans u
 
 4.  Détails: Utilitaire appelé par *ApplyModels.R* lorsque *debutPlot=TRUE*.
 
-## Plots_2\_Shiny_MultiLevels.R
+## Plots_2_Shiny_MultiLevels.R
 
-1.  Appel de la fonction: ***dum \<- Plots_2\_Shiny_MultiLevels(unInstrument)***
+1.  Appel de la fonction: ***dum \<- Plots_2_Shiny_MultiLevels(unInstrument)***
 
 2.  Paramètres d'entrée:
 
@@ -592,169 +592,171 @@ Le projet **PolySpecteuR** comprend plusieurs scripts **R** qu'on utilise dans u
 ## Script d'acquisition avec 3 instruments pour la fluorescence, la transmittance et la réflectance {.unnumbered}
 
 ::: {.blackbox data-latex=""}
-    mainTest_Fl_Tr_Re <- function()
-      
-    #********************************************************
-    # INSTRUCTIONS ---- 
-    #********************************************************
-    # Script d'acquisition de données avec SpectrAAC-2 lorsqu'on ne fait que de la  
-    # fluorescence.
-    # Pour utiliser un autre instrument ou plusieurs instruments, il faut modifier
-    # les 2 lignes avec la mention "#options" à la fin. La première des deux peut
-    # être remplacée par une ou plusieurs lignes à raison d'une ligne par type
-    # de mesure désirée. Par exemple, pour faire des mesures de fluorescence
-    # suivie de mesures de Raman, la première ligne pourrait être remplacée par:
-    #       F_inst <- InitFluoSpecteuR()  
-    #       R_inst <- InitRamanSpecteuR()
-    # Chacune des lignes appelant une routine d'initialisation doit commencer
-    # par un nom unique. Ensuite, il faut mettre à jour les éléments de la 
-    # liste "lesInstruments" définie dans la deuxième ligne. Pour l'exemple
-    # ci-haut, cela donnerait:
-    #       lesInstruments <- list(F_inst,R_inst)
-    # Noter que l'ordre dans cette liste définit l'ordre d'acquisition des 
-    # données.
-    #
-    #********************************************************
-    # AUTEUR: Bernard Panneton, Agriculture et Agroalimentaire Canada
-    # Mars 2022
-    #********************************************************
-    {  
-      #********************************************************
-      #Initialisation ----
-      #********************************************************
-      ##Paramètres graphiques par défaut et logo comme variables globales----
-      op <<- par(no.readonly = TRUE)   
-      logo <<- png::readPNG("PolySpecteuR_Logo.png")
-      #********************************************************
+```         
+mainTest_Fl_Tr_Re <- function()
+  
+#********************************************************
+# INSTRUCTIONS ---- 
+#********************************************************
+# Script d'acquisition de données avec SpectrAAC-2 lorsqu'on ne fait que de la  
+# fluorescence.
+# Pour utiliser un autre instrument ou plusieurs instruments, il faut modifier
+# les 2 lignes avec la mention "#options" à la fin. La première des deux peut
+# être remplacée par une ou plusieurs lignes à raison d'une ligne par type
+# de mesure désirée. Par exemple, pour faire des mesures de fluorescence
+# suivie de mesures de Raman, la première ligne pourrait être remplacée par:
+#       F_inst <- InitFluoSpecteuR()  
+#       R_inst <- InitRamanSpecteuR()
+# Chacune des lignes appelant une routine d'initialisation doit commencer
+# par un nom unique. Ensuite, il faut mettre à jour les éléments de la 
+# liste "lesInstruments" définie dans la deuxième ligne. Pour l'exemple
+# ci-haut, cela donnerait:
+#       lesInstruments <- list(F_inst,R_inst)
+# Noter que l'ordre dans cette liste définit l'ordre d'acquisition des 
+# données.
+#
+#********************************************************
+# AUTEUR: Bernard Panneton, Agriculture et Agroalimentaire Canada
+# Mars 2022
+#********************************************************
+{  
+  #********************************************************
+  #Initialisation ----
+  #********************************************************
+  ##Paramètres graphiques par défaut et logo comme variables globales----
+  op <<- par(no.readonly = TRUE)   
+  logo <<- png::readPNG("PolySpecteuR_Logo.png")
+  #********************************************************
 
-      #********************************************************
-      ## Enlève OOobj si existant----
-      if (exists("OOobj", envir = .GlobalEnv))  rm(OOobj, envir=.GlobalEnv)
-      #********************************************************
+  #********************************************************
+  ## Enlève OOobj si existant----
+  if (exists("OOobj", envir = .GlobalEnv))  rm(OOobj, envir=.GlobalEnv)
+  #********************************************************
 
-      #********************************************************
-      ## Charger des packages R ----
-      #********************************************************
-      ok <- require("rlang")
-      if (!ok) install.packages('rlang')
-      ok <- require("utils")
-      if (!ok) install.packages('utils')
-      ok <- require("here")
-      if (!ok) install.packages('here')
-      
-      # Se placer dans le répertoire R du projet PolySpecteur.
-      # Pour que ça marche, il faut que le présent script
-      # soit dans le répertoire R du projet PolySpecteur.
-      # Cela permet d'utiliser efficacement des chemins
-      # relatifs pour se rendre dans les différents répertoires
-      # utilisés.
-      RPath=here::here()
-      setwd(RPath)
-      
-      #********************************************************
-      ## Charger les scripts du projet PolySpecteuR ----
-      #********************************************************
-      setwd("R")
-      files.sources = list.files(pattern=glob2rx("*.R"),full.names = TRUE)
-      dum <- sapply(files.sources, source, encoding="UTF-8")
-      setwd("..")
-      
-      #********************************************************
-      ##Définir les instruments nécessaires et les initialiser ----
-      #********************************************************
-      
-      F_Inst <- InitFluoSpecteuR()                                  #options
-      if (is.character(F_Inst)) return( "ABANDON")                  #options 
-      
-      R_Inst <- InitReflectSpecteuR()                               #options
-      if (is.character(R_Inst)) return( "ABANDON")                  #options
-      
-      T_Inst <- InitTransmitSpecteuR()                              #options
-      if (is.character(T_Inst)) return( "ABANDON")                  #options
-      
-      lesInstruments <<- list(F_Inst, R_Inst, T_Inst)                #options
+  #********************************************************
+  ## Charger des packages R ----
+  #********************************************************
+  ok <- require("rlang")
+  if (!ok) install.packages('rlang')
+  ok <- require("utils")
+  if (!ok) install.packages('utils')
+  ok <- require("here")
+  if (!ok) install.packages('here')
+  
+  # Se placer dans le répertoire R du projet PolySpecteur.
+  # Pour que ça marche, il faut que le présent script
+  # soit dans le répertoire R du projet PolySpecteur.
+  # Cela permet d'utiliser efficacement des chemins
+  # relatifs pour se rendre dans les différents répertoires
+  # utilisés.
+  RPath=here::here()
+  setwd(RPath)
+  
+  #********************************************************
+  ## Charger les scripts du projet PolySpecteuR ----
+  #********************************************************
+  setwd("R")
+  files.sources = list.files(pattern=glob2rx("*.R"),full.names = TRUE)
+  dum <- sapply(files.sources, source, encoding="UTF-8")
+  setwd("..")
+  
+  #********************************************************
+  ##Définir les instruments nécessaires et les initialiser ----
+  #********************************************************
+  
+  F_Inst <- InitFluoSpecteuR()                                  #options
+  if (is.character(F_Inst)) return( "ABANDON")                  #options 
+  
+  R_Inst <- InitReflectSpecteuR()                               #options
+  if (is.character(R_Inst)) return( "ABANDON")                  #options
+  
+  T_Inst <- InitTransmitSpecteuR()                              #options
+  if (is.character(T_Inst)) return( "ABANDON")                  #options
+  
+  lesInstruments <<- list(F_Inst, R_Inst, T_Inst)                #options
 
-      lestypes <- lapply(lesInstruments, function(I) I$type)
-      
-      #********************************************************
-      ## Définir le plan d'expérience et le chemin pour stocker les données ----
-      #********************************************************
-      Plan <- GetPlanExp()
-      dataSetID <-utils::winDialogString(
-        "Entrer un identifiant pour les noms de fichier de données",
-        as.character(Sys.Date()))
-      dataPath <- utils::choose.dir(default = "",
-              caption = "Choisir un répertoire pour stocker les données.")
-      
-      #********************************************************
-      ## Permettre la modif des paramètres d'acquisition à chaque échantillon ----
-      #********************************************************
-      tuneParams <- FALSE
-      yesno <- utils::winDialog("yesno",
-          "Permettre la modification des paramètres à chaque échantillon.")
-      if (yesno=="YES") tuneParams <- TRUE
-      
-      #********************************************************
-      #Phase d'acquisition de données ----
-      #********************************************************
-      goOn <- TRUE
-      while(goOn){    ## Boucle sur les échantillons----
-        letest <- PickFromPlan(Plan)
-        if (letest == "OK"){
-          k=0
-          isValid <- TRUE
-          ### Boucle sur les instruments----
-          for (t in lestypes){   
-            k <- k+1
-            if (t=="Raman"){
-              if (isValid) {
-                DoRamanSpecteuR(lesInstruments[[k]],Plan, tuneParams)
-                dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
-                isValid <- (dum=="OK") & isValid
-              }
-            }
-            if (t=="Fluorescence"){
-              if (isValid){
-                 DoFluoSpecteuR(lesInstruments[[k]], Plan, tuneParams)
-                 dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
-                 isValid <- (dum=="OK") & isValid
-              }
-            }
-            if (t=="Reflectance"){
-              if (isValid){
-                DoReflectSpecteuR(lesInstruments[[k]], Plan, tuneParams)
-                dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
-                isValid <- (dum=="OK") & isValid
-              }
-            }
-            if (t=="Transmittance"){
-              if (isValid){
-                DoTransmitSpecteuR(lesInstruments[[k]], Plan, tuneParams)
-                dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
-                isValid <- (dum=="OK") & isValid
-              }
-            }
+  lestypes <- lapply(lesInstruments, function(I) I$type)
+  
+  #********************************************************
+  ## Définir le plan d'expérience et le chemin pour stocker les données ----
+  #********************************************************
+  Plan <- GetPlanExp()
+  dataSetID <-utils::winDialogString(
+    "Entrer un identifiant pour les noms de fichier de données",
+    as.character(Sys.Date()))
+  dataPath <- utils::choose.dir(default = "",
+          caption = "Choisir un répertoire pour stocker les données.")
+  
+  #********************************************************
+  ## Permettre la modif des paramètres d'acquisition à chaque échantillon ----
+  #********************************************************
+  tuneParams <- FALSE
+  yesno <- utils::winDialog("yesno",
+      "Permettre la modification des paramètres à chaque échantillon.")
+  if (yesno=="YES") tuneParams <- TRUE
+  
+  #********************************************************
+  #Phase d'acquisition de données ----
+  #********************************************************
+  goOn <- TRUE
+  while(goOn){    ## Boucle sur les échantillons----
+    letest <- PickFromPlan(Plan)
+    if (letest == "OK"){
+      k=0
+      isValid <- TRUE
+      ### Boucle sur les instruments----
+      for (t in lestypes){   
+        k <- k+1
+        if (t=="Raman"){
+          if (isValid) {
+            DoRamanSpecteuR(lesInstruments[[k]],Plan, tuneParams)
+            dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
+            isValid <- (dum=="OK") & isValid
           }
-
-          ### Écriture des données si valides----
-          if (isValid){      
-             writeYFile(Plan, dataPath,dataSetID)
-             writeData(Plan,lesInstruments,dataPath,dataSetID) 
+        }
+        if (t=="Fluorescence"){
+          if (isValid){
+             DoFluoSpecteuR(lesInstruments[[k]], Plan, tuneParams)
+             dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
+             isValid <- (dum=="OK") & isValid
           }
-        }  
-        
-        ### Option de continuer ou quitter ----
-        sel <- select.list(c("Oui","Non"), preselect = "Oui", 
-            title="CONTINUER?",graphics = T)
-        goOn <- ifelse(sel=="Oui",TRUE,FALSE)
-      }        #Fin de la boucle sur les échantillons
-      
-      #********************************************************
-      #Nettoyage et arrêt du script ----
-      #********************************************************
-      setwd(RPath)
-      Clean_n_Close(list(lesInstruments))
-    }
+        }
+        if (t=="Reflectance"){
+          if (isValid){
+            DoReflectSpecteuR(lesInstruments[[k]], Plan, tuneParams)
+            dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
+            isValid <- (dum=="OK") & isValid
+          }
+        }
+        if (t=="Transmittance"){
+          if (isValid){
+            DoTransmitSpecteuR(lesInstruments[[k]], Plan, tuneParams)
+            dum <- Plots_2_Shiny_MultiLevels(lesInstruments[[k]])
+            isValid <- (dum=="OK") & isValid
+          }
+        }
+      }
+
+      ### Écriture des données si valides----
+      if (isValid){      
+         writeYFile(Plan, dataPath,dataSetID)
+         writeData(Plan,lesInstruments,dataPath,dataSetID) 
+      }
+    }  
+    
+    ### Option de continuer ou quitter ----
+    sel <- select.list(c("Oui","Non"), preselect = "Oui", 
+        title="CONTINUER?",graphics = T)
+    goOn <- ifelse(sel=="Oui",TRUE,FALSE)
+  }        #Fin de la boucle sur les échantillons
+  
+  #********************************************************
+  #Nettoyage et arrêt du script ----
+  #********************************************************
+  setwd(RPath)
+  Clean_n_Close(list(lesInstruments))
+}
+```
 :::
 
 \newpage
@@ -763,10 +765,10 @@ Le projet **PolySpecteuR** comprend plusieurs scripts **R** qu'on utilise dans u
 
 ## Utilisation du *"Folding"* dans RStudio pour faciliter la navigation dans les scripts {.unnumbered}
 
-Les scripts du projet ont été mis en forme pour faciliter la navigation dans le code. RStudio permet de découper le code en section avec un titre pour chaque section. L'utilisation de ces fonctionnalités va être illustré à l'aide du script *mainRaman_w\_Models.R*. Quand on ouvre le script dans RStudio, la fenêtre d'édition se présente comme suit:\
+Les scripts du projet ont été mis en forme pour faciliter la navigation dans le code. RStudio permet de découper le code en section avec un titre pour chaque section. L'utilisation de ces fonctionnalités va être illustré à l'aide du script *mainRaman_w_Models.R*. Quand on ouvre le script dans RStudio, la fenêtre d'édition se présente comme suit:\
 \
 ![](unFoldedScript.PNG)
 
-En haut à droite de la fenêtre d'édition, il y a une icône permettant d'afficher la structure du fichier. On retrouve aussi des puces permettant de cacher/montrer des sections du document juste à côté des numéros de ligne. Un triangle vers le bas indique que le code de cette section est apparent, un triangle vers le haut indique que le code n'est pas apparent. En utilisant l'option *Folding* du menu *Edit*, il est possible de tout cacher/ouvrir d'un coup. La figure plus bas montre le script avec la structure du document sur la droite et toutes les sections du code cachées à l'exception de celles qu'on doit éditer manuellement pour définir une session de prise de données. Ces sections à éditer sont identifiées avec la mention "OPTIONS - " dans l'entête de la section. Cette présentation permet de simplifier l'édition tout en évitant d'éditer les autres sections du script, ce qui est susceptible de générer des erreurs.\
+En haut à droite de la fenêtre d'édition, il y a une icône permettant d'afficher la structure du fichier. On retrouve aussi des puces permettant de cacher/montrer des sections du document juste à côté des numéros de ligne. Un triangle vers le bas indique que le code de cette section est apparent, un triangle vers le haut indique que le code n'est pas apparent. En utilisant l'option *Folding* du menu *Edit*, il est possible de tout cacher/ouvrir d'un coup. La figure plus bas montre le script avec la structure du document sur la droite et toutes les sections du code cachées à l'exception de celles qu'on doit éditer manuellement pour définir une session de prise de données. Ces sections à éditer sont identifiées avec la mention "OPTIONS -" dans l'entête de la section. Cette présentation permet de simplifier l'édition tout en évitant d'éditer les autres sections du script, ce qui est susceptible de générer des erreurs.\
 \
 ![](Folded_4_OptionEditing.PNG)

@@ -1,0 +1,99 @@
+********************************************************************************
+Modifications du 25 Janvier 2024
+B. Panneton
+********************************************************************************
+________________________________________________________________________________
+1. Comment annuler la correction pour le "Stray light"
+  Dans le fichier des paramètres, on définit 2 longueurs d'onde donnant le début
+  et la fin de la plage des longueurs d'onde pour obtenir les données servant à
+  cette correction. Ces paramètres sont "stray_low" et "stray_high". En mettant
+  "stray_low" égal à 0, on prévient que la correction pour le "stray light" soit 
+  appliquée. Voici un exemple: 
+  
+  #**********************************************************************
+    #//////////////////////////////////////////////////////////////////////   
+    # P A R A M Ê T R E S    R É F L E C T A N C E 
+    #*********************************************************************
+    #*
+    #*********************************************************************
+    # P A R A M Ê T R E S    P O U V A N T    Ê T R E    É D I T É S 
+    # E N    C O U R S     D E     S E S S I O N     D' A C Q U I S I T I O N.
+    #*********************************************************************
+    Nb_reps_Reflect=1 #Nombre de répétitions en variant la position de l'échantillon
+    T_Reflect=50    # temps d'exposition en msec
+    Box_Reflect=1     # Boxcar pour l'acquisition
+    Scans_Reflect=10   # nombre de scans par acquisition
+    
+    stray_low=0      #début de la plage de longueur d'onde pour évaluer stray light
+    stray_high=230     #fin de la plage de longueur d'onde pour évaluer stray light
+    
+    # T E M P S   D E   S T A B I L I S A T I O N
+    T_DEL=0.8   #secondes
+    
+  __________________________________________________________________________________
+
+  2. Contrôle du "High Gain Mode"
+    La mise en oeuvre a demandé la création de nouvelles fonctions dans OOInterface.R,
+    un ajout d'un paramètre dans le fichier de paramètres pour la réflectance et
+    une modification à InitReflectSpecteuR.R.
+    
+    2.1 Modifications à OOInterface.R. Deux nouvelles fonctions ont été ajoutées:
+    
+      2.1.1 #*****************************************************************************
+            # GetHighGain définit un objet pour le contrôle du gain 
+            #
+            # ENTRÉES
+            #             leSpectro   :   liste créée par Define_Spectro
+            #
+            # SORTIES
+            #             leSpectro auquel le HighGain est ajouté dans la liste. HighGain
+            #             est un objet pour accéder aux fonctions associées au contrôle du
+            #             gain élevé. Si cette option n'est pas disponible pour le spectro,
+            #             ça retourne NULL.
+            #*****************************************************************************
+            
+      2.1.2 #*****************************************************************************
+            # SetHighGain 
+            #
+            # ENTRÉES
+            #             leSpectro   :   liste créée par Define_Spectro
+            #
+            # SORTIES
+            #            Aucune. Initie le gain élevé si disponible
+            #********************************************
+            
+    Ces fonctions sont invoquées dans InitReflectSpecteuR.R (voir 2.3 plus bas) 
+    selon la valeur du paramètre (voir 2.2 plus bas).
+    
+    2.2 Paramètre qui contrôle l'activation du gain.
+        Dans le fichier de paramètres, on a ajouté le paramètre HighGainMode :
+        
+        highGainMode = TRUE  #TRUE force le mode High Gain si disponible pour le spectro.
+                             #FALSE ignore la commande pour force le High Gain.
+                             
+    2.3 Modifications à InitReflectSpecteuR.R. Dans le bloc de code qui suit,
+        la modification comprend le code pour la condition if (HighGainMode).
+        Si HighGainMode est TRUE, ça appelle GetHighGain et SetHighGain. Si
+        HighGainMode est FALSE, aucun appel de fonctions:
+    
+        ____________________________________________________________
+        #On définit le spectro pour l'environnement de l'instrument.
+        with(ReflectEnv,{ 
+             lespectro <- Define_Spectro(OOobj,lespectro)
+             SetCorrections(OOobj,lespectro,Lin = 1, Dark = 0)
+             if (HighGainMode){
+               lespectro=GetHighGain(lespectro,OOobj$mywrap)
+               SetHighGain(lespectro,OOobj$mywrap,highGainMode)
+             }
+             lespectro <- Define_WavelengthRange(
+                  lespectro,reflect_l_min,reflect_l_max,reflect_step
+               )
+        })
+        ____________________________________________________________
+        
+        N.B. je ne sais pas quand la fonction HighGain est réinitialisée à sa 
+        valeur par défaut. Il faut peut-être débrancher et rebrancher le spectro 
+        pour réinitialiser. À vérifier.
+    
+  
+  
