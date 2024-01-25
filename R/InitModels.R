@@ -79,16 +79,18 @@ InitModels<-function(lesInstruments){
       htmlOutput("titre"),
       fileInput("mods","Modèle 1",
                 buttonLabel = "Choisir des fichiers de modèles",
+                multiple = T,
                 width = "600px"),
       hr(),
       h3("Liste des modèles sélectionnés"),
       htmlOutput("mod1")
     )
   )
+  
   server = function(input,output,session){
     
-    #permettre des fichiers de 60 MB et moins
-    options(shiny.maxRequestSize=100*1024^2) 
+    #permettre des fichiers de 300 MB et moins
+    options(shiny.maxRequestSize=300*1024^2) 
     
     output$titre = renderText("<b>Nom des modèles")
     #A chaque fois que l'utilisateur appuie sur le bouton "Ajouter un champ",
@@ -96,19 +98,21 @@ InitModels<-function(lesInstruments){
     
     output$mod1 <- renderText({
       dum <- input$mods
-      ifelse(is.null(dum),"Aucun modèle",{
-        lesModsFiles <<- c(lesModsFiles,dum$name)
-        modName <- tools::file_path_sans_ext(dum$name)
-        createEnvStr <- paste0("modelEnv$",modName,"<-new.env()")
-        eval(parse(text=createEnvStr))
-        
-        lePath <- stringr::str_replace_all(dum$datapath,"\\\\","/")
-        print(lePath)
-        loadStr <- paste0("load('",lePath,"',envir=modelEnv$",modName,")")
-        eval(parse(text=loadStr))
-        
-      })
-      HTML(paste(lesModsFiles, collaps = '<br/>'))
+      ifelse(is.null(dum),"Aucun modèle",
+             {
+               for (k in 1:nrow(dum)){
+                 lesModsFiles <<- c(lesModsFiles,dum$name[k])
+                 modName <- tools::file_path_sans_ext(dum$name[k])
+                 createEnvStr <- paste0("modelEnv$",modName,"<-new.env()")
+                 eval(parse(text=createEnvStr))
+                 
+                 lePath <- stringr::str_replace_all(dum$datapath[k],"\\\\","/")
+                 loadStr <- paste0("load('",lePath,"',envir=modelEnv$",modName,")")
+                 eval(parse(text=loadStr))
+               }
+               HTML(paste(lesModsFiles, collaps = '<br/>'))
+             }
+      )
     })
     #Quand le bouton "Terminer" de la barre de titre est utilisé,
     #on quitte le shinyApp.
@@ -120,6 +124,7 @@ InitModels<-function(lesInstruments){
   runGadget(ui,server,viewer=paneViewer())
   rm(lesModsFiles, envir = .GlobalEnv)
   modelEnv <- as.list(modelEnv)
+  modelEnv <- modelEnv[order(names(modelEnv))]  #to force alphabetical order
   
   #Vérifier compatibilité avec mesures----
   #*****************************************************************************

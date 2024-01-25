@@ -100,11 +100,22 @@ mainRaman_w_Models <- function()
   ## Définir plan d'expérience et chemin pour stocker les données ----
   #********************************************************
   Plan <- GetPlanExp()
-  dataSetID <-utils::winDialogString(
-    "Entrer un identifiant pour les noms de fichier de données",
-    as.character(Sys.Date()))
-  dataPath <- utils::choose.dir(default = "",
-        caption = "Choisir un répertoire pour stocker les données.")
+  load('dataPaths_n_names.RData')
+  if (dataPath!=""){
+    dumAnswer <- utils::winDialog(type="yesno",
+                                  message=paste("Voulez-vous stocker les données dans",
+                                                dataPath,'\\..._',dataSetID))
+    
+  }
+  
+  if ((dataPath=="") | (dumAnswer=="NO")){
+    dataSetID <-utils::winDialogString(
+      "Entrer un identifiant pour les noms de fichier de données",
+      as.character(Sys.Date()))
+    dataPath <- utils::choose.dir(default = "",
+                                  caption = "Choisir un répertoire pour stocker les données.")
+    save(dataPath,dataSetID, file="dataPaths_n_names.RData")
+  }
   
   #********************************************************
   ## Permettre modif paramètres d'acquisition à chaque échantillon ----
@@ -183,7 +194,7 @@ mainRaman_w_Models <- function()
     
     ###Option de continuer ou quitter ----
     sel <- select.list(c("Oui","Non"), preselect = "Oui", 
-          title="CONTINUER?",graphics = T)
+          title="CONTINUER?",graphics = F)
     goOn <- ifelse(sel=="Oui",TRUE,FALSE)
   }        #Fin de la boucle sur les échantillons
   

@@ -18,6 +18,55 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
   source(file.path(here::here(),"R/Apply_PreTreatments.R"), encoding = 'UTF-8')
   source(file.path(here::here(),"R/playTwoSpectra.R"), encoding = 'UTF-8')
   
+  
+  #*************************************************************************
+  #merge_png_2_pdf
+  #*************************************************************************
+  merge_png_2_pdf <- function(pdfFile, pngFiles, deletePngFiles=FALSE) {
+    
+    #### Package Install ####
+    pngPackageExists <- require ("png")
+    if ( !pngPackageExists ) {
+      install.packages ("png")
+      library ("png")
+      
+    }
+    
+    ok <- require("grid")
+    if (!ok) {
+      install.packages('grid')
+      library("grid")
+    }
+    
+    #########################
+    
+    pdf(pdfFile,paper= "USr",width=9.5,height = 7)
+    
+    n <- length(pngFiles)
+    
+    for( i in 1:n) {
+      
+      pngFile <- pngFiles[i]
+      
+      pngRaster <- readPNG(pngFile)
+      
+      grid.raster(pngRaster, width=unit(0.9, "npc"), 
+                  height= unit(0.75, "npc"))
+      
+      if (i < n) plot.new()
+      
+    }
+    
+    dev.off()
+    
+    if (deletePngFiles) {
+      
+      unlink(pngFiles)
+    }
+    
+  }
+  
+  
   #*************************************************************************
   #PlotAll
   #*************************************************************************
@@ -57,12 +106,15 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
       })
       
       observeEvent(input$export,{
-        whichPlot <- which(input$modelselect==unlist(modelNames))
-        unPath <- utils::choose.files(default = "",
+        # whichPlot <- which(input$modelselect==unlist(modelNames))
+        unPath <- utils::choose.files(default = paste0("resMod_EchID_",echID),
                       caption = "Choisir un nom de fichier",
-                      multi = F, filters = Filters[c("png"),])
-        file.copy(from=lesplots[[whichPlot]]$src,
-                  to=unPath, overwrite=T)
+                      multi = F, filters = Filters[c("pdf"),])
+        pngFiles <- lapply(lesplots, function(p) p$src)
+        pngFiles <- unlist(pngFiles)
+        merge_png_2_pdf(unPath, pngFiles, deletePngFiles=FALSE)
+        #file.copy(from=lesplots[[whichPlot]]$src,
+                  # to=unPath, overwrite=T)
       })
       
       observeEvent(input$done,{
@@ -103,9 +155,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
         if (is.null(mydata))
           predict(plsdaFit[[ii]]$finalModel, newdata=plsdaFit[[ii]]$trainingData[,-1], type="prob")
         else
-          predict(plsdaFit[[ii]]$finalModel, newdata=mydata[[ii]][,-1], type="prob")
+          predict(plsdaFit[[ii]]$finalModel, newdata=mydata[[ii]], type="prob")
       })
-      Ps<-lapply(Ps,drop)  #remove useless third dimension.
+      Ps<-lapply(Ps,abind::adrop,drop=c(F,F,T))  #remove useless third dimension.
       pooled <- Ps[[1]] * NA 
       n <- nrow(pooled) 
       classes <- colnames(pooled) 
@@ -125,12 +177,13 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
     }else  #only one model - no aggregation.
     {
       if (is.null(mydata)){
-        val_pred_cl <- predict(plsdaFit[[1]],newdata=plsdaFit[[1]]$trainingData[,-1]
+        val_pred_cl <- predict(plsdaFit[[1]]$finalModel,newdata=plsdaFit[[1]]$trainingData[,-1]
                                , type="prob")
       }else
       {
-        val_pred_cl <- predict(plsdaFit[[1]],newdata=mydata[[1]], type="prob")
+        val_pred_cl <- predict(plsdaFit[[1]]$finalModel,newdata=mydata[[1]], type="prob")
       }
+      val_pred_cl<-abind::adrop(val_pred_cl,drop=c(F,F,T))  #remove useless third dimension.
       classes<-colnames(val_pred_cl)
       if (!probs)
         val_pred_cl <- factor(classes[apply(val_pred_cl, 1, which.max)], levels = classes) 
@@ -262,7 +315,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                
                ##### Graphiques----
                if (plotMe){
-                 outfile <- tempfile(fileext = '.png')
+                 nggs <- length(lesplots)
+                 fPattern <- paste0("Plot",sprintf("%02d", nggs+1))
+                 outfile <- tempfile(pattern=fPattern,fileext = '.png')
                  png(outfile, width = width, height = height)
                  
                  nComp <- unModele$pls_ncomp
@@ -309,7 +364,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                         )
                  dev.off()
                  
-                 nggs <- length(lesplots)
+                 
                  lesplots[[paste0("PLS ",nggs+1)]] <- 
                    list(src = outfile,
                         contentType = 'image/png',
@@ -324,18 +379,31 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
              },
              #### PCA----
              PCA = {
-               iind=as.list(1:length(preTreatData))
-               acp_pred <- lapply(iind, function(i){
-                 newdats <- as.data.frame(t(preTreatData[[i]][2,]))
-                 colnames(newdats) <- dimnames(unModele$lesACPs[[i]]$rotation)[[1]]
-                 lesPreds <- predict(unModele$lesACPs[[i]],newdats)
-                
+               #Vérifier si le modèle vient de ShInSpectoR
+               fromShInSpectoR <- "source" %in% names(unModele$model_descript)
+               ###### Modèle de ShInSpectoR ----
+               if (fromShInSpectoR){
+                 for (dtype in unModele$model_descript$datatype){
+                   idtype <- which(dtype==unModele$model_descript$datatype)
+                   spdf<-as.data.frame(t(preTreatData[[dtype]][2,]))
+                   colnames(spdf)<-paste(dtype,as.character(preTreatData[[dtype]][1,]),sep="_")
+                   if (idtype==1){
+                     y <- spdf
+                   }else
+                   {
+                     y <- cbind(y,spdf)
+                   }
+                 }
+                 pca_set <- y
                  
-                 ##### Graphiques----
+                 lesPreds <- predict(unModele$lePCA,pca_set)
+                 ####### Graphiques----
                  if (plotMe){
-                   outfile <- tempfile(fileext = '.png')
+                   nggs <- length(lesplots)
+                   fPattern <- paste0("Plot",sprintf("%02d", nggs+1))
+                   outfile <- tempfile(pattern=fPattern, fileext = '.png')
                    png(outfile, width = width, height = height)
-                  
+                   
                    toColor <- unModele$colorby
                    if (is.data.frame(toColor)) toColor <- as.factor(rep("Données",nrow(toColor)))
                    
@@ -348,7 +416,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                    mescols_fill=rep(mescols_fill,recycling)
                    
                    par(mfrow=c(2,2))
-                   lesScores <- unModele$lesACPs[[i]]$x
+                   lesScores <- unModele$lePCA$x
                    
                    for (k in seq(1,4,2)){
                      xLimits <- extendrange(c(lesScores[,k],lesPreds[k]))
@@ -377,27 +445,28 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                           pt.cex = c(rep(2,nCl),3), cex=1.2, bty="n")
                    
                    text(0,1,paste0(modelName,"\nsur\n",
-                               paste(instCombi,collapse=' et '),
-                               "\n\n", names(preTreatData)[i],
-                               "\n\nÉchantillon: ",echID),
-                         adj=c(0,1), cex=1.5, font=2)
+                                   paste(instCombi,collapse=' et '),
+                                   "\n", 
+                                   paste(names(preTreatData), collapse = ' et '),
+                                   "\n\nÉchantillon: ",echID),
+                        adj=c(0,1), cex=1.2, font=2)
                    
                    #ODist vs SDist 
                    #Calcul OD et SD pour l'échantillon
                    #Voir manuel de PLS Toolbox de EigenVector dans Doc du projet
-                   scs <- lesPreds[1,1:unModele$lesNCPs[[i]],drop=F]
-                   eigVals <- unModele$lesACPs[[i]]$sdev[1:unModele$lesNCPs[[i]]] 
+                   scs <- lesPreds[1,1:unModele$NCPs,drop=F]
+                   eigVals <- unModele$lePCA$sdev[1:unModele$NCPs] 
                    midMat <- diag(1/eigVals^2)
                    SD <- sqrt(scs %*% midMat %*% t(scs))
                    
-                   x <- as.matrix(newdats-unModele$lesACPs[[i]]$center)
-                   lds <- unModele$lesACPs[[i]]$rotation[,1:unModele$lesNCPs[[i]],drop=F]
+                   x <- as.matrix(pca_set-unModele$lePCA$center)
+                   lds <- unModele$lePCA$rotation[,1:unModele$NCPs,drop=F]
                    midMat <- diag(nrow=dim(x)[2]) - lds %*% t(lds)
                    OD <- sqrt(x %*% midMat %*% t(x))
                    
-                   xLimits <- extendrange(c(unModele$dds[[i]]$SDist,SD))
-                   yLimits <- extendrange(c(unModele$dds[[i]]$ODist,OD))
-                   plot(unModele$dds[[i]]$SDist,unModele$dds[[i]]$ODist, pch = 21, cex=1.5,
+                   xLimits <- extendrange(c(unModele$dds$SDist,SD))
+                   yLimits <- extendrange(c(unModele$dds$ODist,OD))
+                   plot(unModele$dds$SDist,unModele$dds$ODist, pch = 21, cex=1.5,
                         xlim = xLimits,
                         ylim = yLimits,
                         col = "black", bg=mescols_fill[toColor],
@@ -405,27 +474,201 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                         ylab = toupper("Distance résiduelle"),
                         cex.lab=1.5, cex.axis=1.5)
                    points(SD,OD,col="white", bg="red", cex=2.5, pch=21)
-                   abline(h=unModele$dds[[i]]$critOD, v=unModele$dds[[i]]$critSD,
+                   abline(h=unModele$dds$critOD, v=unModele$dds$critSD,
                           col="red",lwd=2,lty=2)
                    
                    dev.off()
                    
                    
                    nggs <- length(lesplots)
-                   lesplots[[paste0("ACP ",nggs+1)]] <<- #<<- because lapply!
+                   lesplots[[paste0("ACP ",nggs+1)]] <- 
                      list(src = outfile,
                           contentType = 'image/png',
                           width = width,
                           height = height,
                           alt = paste0(modelName," sur ",
                                        paste(instCombi,collapse=' et '),
-                                       " - ",names(preTreatData)[i])
+                                       " - ",
+                                       paste(names(preTreatData), collapse = ' et ')
+                          )
                      )
                    
                    par(mfrow=c(1,1))
+                   ##### Sortie fichier----
+                   leDir <- file.path(dataPath,"resModel")
+                   if (!dir.exists(leDir)) dir.create(leDir)
+                   fname <- file.path(leDir,paste0(modelName,"_",paste(instCombi,collapse='_'),".txt"))
+                   #Création d'une ligne pour écrire dans le fichier.
+                   ligne=NULL
+                   #Date et heure pour insérer dans le fichier
+                   ladate=as.character(Sys.Date())
+                   letemps=format(Sys.time(),"%X")
+                   
+                   ncol=dim(Plan$leplan)[2]
+                   for (i in 1:ncol){
+                     ligne=c(ligne,as.character(Plan$leplan[Plan$selected,i]))
+                   }
+                   ligne=c(ligne,ladate,letemps,as.character(signif(lesPreds[1:unModele$NCPs],4)))
+                   ligne=c(ligne,signif(c(SD,OD),4))
+                   if (file.exists(fname)) {  #append
+                     mycon=file(fname,"a")
+                     cat(ligne,file=mycon,sep="\t")
+                     cat("\n",file=mycon)
+                     close(mycon)
+                   }else
+                   {
+                     entete=c(names(Plan$leplan),"Date","Heure",
+                              paste0("PC",1:unModele$NCPs),"SD","OD")
+                     mycon=file(fname,"a")   
+                     cat(entete,file=mycon,sep="\t")   #entête
+                     cat("\n",file=mycon)
+                     cat(ligne,file=mycon,sep="\t") #données
+                     cat("\n",file=mycon)
+                     close(mycon)
+                   }
                  }
-               })
-               
+               }else
+                 
+               #### Modèle de InSpectoR ----  
+               {
+                 iind=as.list(1:length(preTreatData))
+                 acp_pred <- lapply(iind, function(i){
+                   newdats <- as.data.frame(t(preTreatData[[i]][2,]))
+                   colnames(newdats) <- dimnames(unModele$lesACPs[[i]]$rotation)[[1]]
+                   lesPreds <- predict(unModele$lesACPs[[i]],newdats)
+                  
+                   
+                   ####### Graphiques----
+                   if (plotMe){
+                     nggs <- length(lesplots)
+                     fPattern <- paste0("Plot",sprintf("%02d", nggs+1))
+                     outfile <- tempfile(pattern=fPattern, fileext = '.png')
+                     png(outfile, width = width, height = height)
+                     
+                     toColor <- unModele$colorby
+                     if (is.data.frame(toColor)) toColor <- as.factor(rep("Données",nrow(toColor)))
+                     
+                     mescols=c("darkred","blue","green3","salmon","yellow3","black","red3","magenta","gray70","cyan") 
+                     #To define corresponding lighter transparent colors for symbol fill
+                     mescols_fill=col2rgb(mescols,alpha=TRUE)
+                     mescols_fill[4,]=145
+                     mescols_fill=rgb(mescols_fill[1,],mescols_fill[2,],mescols_fill[3,],alpha=mescols_fill[4,],maxColorValue = 255)
+                     recycling=ceiling(length(unique(toColor))/10)  #Only 10 colors defined, so we recycle if necessary
+                     mescols_fill=rep(mescols_fill,recycling)
+                     
+                     par(mfrow=c(2,2))
+                     lesScores <- unModele$lesACPs[[i]]$x
+                     
+                     for (k in seq(1,4,2)){
+                       xLimits <- extendrange(c(lesScores[,k],lesPreds[k]))
+                       yLimits <- extendrange(c(lesScores[,(k+1)],lesPreds[k+1]))
+                       plot(lesScores[,k],lesScores[,(k+1)], pch = 21, cex=2,
+                            xlim = xLimits,
+                            ylim = yLimits,
+                            col = "black", bg=mescols_fill[toColor],
+                            xlab=paste0("PC",k), ylab = paste0("PC",(k+1)),
+                            cex.lab=1.5, cex.axis=1.5)
+                       points(lesPreds[k],lesPreds[k+1]
+                              ,col="white", bg="red", cex=3, pch=21)
+                       abline(v=0,h=0,col="gray80",lty=3)
+                     }
+                     #TITRE et LÉGENDE
+                     plot.new()
+                     classes <- levels(toColor)
+                     nCl <- length(classes)
+                     legend("bottomright",legend=c(classes,"Prédiction","Limites"),
+                            inset=c(0.1,0),
+                            col=c(rep("black",nCl),"white","red"),
+                            lty = c(rep(0,nCl),0,2),
+                            lwd = c(rep(0,nCl),0,2),
+                            pt.bg=c(mescols_fill[1:nCl],"red",NA), 
+                            pch=c(rep(21,nCl),21,NA), 
+                            pt.cex = c(rep(2,nCl),3), cex=1.2, bty="n")
+                     
+                     text(0,1,paste0(modelName,"\nsur\n",
+                                 paste(instCombi,collapse=' et '),
+                                 "\n\n", names(preTreatData)[i],
+                                 "\n\nÉchantillon: ",echID),
+                           adj=c(0,1), cex=1.5, font=2)
+                     
+                     #ODist vs SDist 
+                     #Calcul OD et SD pour l'échantillon
+                     #Voir manuel de PLS Toolbox de EigenVector dans Doc du projet
+                     scs <- lesPreds[1,1:unModele$lesNCPs[[i]],drop=F]
+                     eigVals <- unModele$lesACPs[[i]]$sdev[1:unModele$lesNCPs[[i]]] 
+                     midMat <- diag(1/eigVals^2)
+                     SD <- sqrt(scs %*% midMat %*% t(scs))
+                     
+                     x <- as.matrix(newdats-unModele$lesACPs[[i]]$center)
+                     lds <- unModele$lesACPs[[i]]$rotation[,1:unModele$lesNCPs[[i]],drop=F]
+                     midMat <- diag(nrow=dim(x)[2]) - lds %*% t(lds)
+                     OD <- sqrt(x %*% midMat %*% t(x))
+                     
+                     xLimits <- extendrange(c(unModele$dds[[i]]$SDist,SD))
+                     yLimits <- extendrange(c(unModele$dds[[i]]$ODist,OD))
+                     plot(unModele$dds[[i]]$SDist,unModele$dds[[i]]$ODist, pch = 21, cex=1.5,
+                          xlim = xLimits,
+                          ylim = yLimits,
+                          col = "black", bg=mescols_fill[toColor],
+                          xlab=toupper("Distance dans le modèle"),
+                          ylab = toupper("Distance résiduelle"),
+                          cex.lab=1.5, cex.axis=1.5)
+                     points(SD,OD,col="white", bg="red", cex=2.5, pch=21)
+                     abline(h=unModele$dds[[i]]$critOD, v=unModele$dds[[i]]$critSD,
+                            col="red",lwd=2,lty=2)
+                     
+                     dev.off()
+                     
+                     
+                     nggs <- length(lesplots)
+                     lesplots[[paste0("ACP ",nggs+1)]] <<- #<<- because lapply!
+                       list(src = outfile,
+                            contentType = 'image/png',
+                            width = width,
+                            height = height,
+                            alt = paste0(modelName," sur ",
+                                         paste(instCombi,collapse=' et '),
+                                         " - ",names(preTreatData)[i])
+                       )
+                     
+                     par(mfrow=c(1,1))
+                   }
+                   ##### Sortie fichier----
+                   leDir <- file.path(dataPath,"resModel")
+                   if (!dir.exists(leDir)) dir.create(leDir)
+                   fname <- file.path(leDir,paste0(modelName,"_",
+                                                   unModele$model_descript$datatype[i],"_",
+                                                   paste(instCombi,collapse='_'),".txt"))
+                   #Création d'une ligne pour écrire dans le fichier.
+                   ligne=NULL
+                   #Date et heure pour insérer dans le fichier
+                   ladate=as.character(Sys.Date())
+                   letemps=format(Sys.time(),"%X")
+                   
+                   ncol=dim(Plan$leplan)[2]
+                   for (i in 1:ncol){
+                     ligne=c(ligne,as.character(Plan$leplan[Plan$selected,i]))
+                   }
+                   ligne=c(ligne,ladate,letemps,as.character(signif(lesPreds[1:unModele$lesNCPs[[i]]],4)))
+                   ligne=c(ligne,signif(c(SD,OD),4))
+                   if (file.exists(fname)) {  #append
+                     mycon=file(fname,"a")
+                     cat(ligne,file=mycon,sep="\t")
+                     cat("\n",file=mycon)
+                     close(mycon)
+                   }else
+                   {
+                     entete=c(names(Plan$leplan),"Date","Heure",
+                              paste0("PC",1:unModele$lesNCPs[[i]]),"SD","OD")
+                     mycon=file(fname,"a")   
+                     cat(entete,file=mycon,sep="\t")   #entête
+                     cat("\n",file=mycon)
+                     cat(ligne,file=mycon,sep="\t") #données
+                     cat("\n",file=mycon)
+                     close(mycon)
+                   }
+                 })
+              }
              },
              #### PLSDA----
              PLSDA = {
@@ -445,7 +688,7 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                  plsda_set <- list(y)
                }else
                {
-                 ind_lesX_list<-as.list(seq_len(length(model_descript$datatype)))
+                 ind_lesX_list<-as.list(seq_len(length(unModele$model_descript$datatype)))
                  plsda_set <- list()
                  for (dtype in unModele$model_descript$datatype){
                    idtype <- which(dtype==unModele$model_descript$datatype)
@@ -498,7 +741,9 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                dum2<-tidyr::gather(dum1,Pred,Prob,-cl,factor_key = TRUE)
                levels(dum2$cl)=paste("True: ",levels(dum2$cl),sep="")
                if (plotMe){
-                 outfile <- tempfile(fileext = '.png')
+                 nggs <- length(lesplots)
+                 fPattern <- paste0("Plot",sprintf("%02d", nggs+1))
+                 outfile <- tempfile(pattern=fPattern, fileext = '.png')
                  png(outfile, width = width, height = height)
                  
                  p<-ggplot2::ggplot(dum2,ggplot2::aes(Pred,Prob))
