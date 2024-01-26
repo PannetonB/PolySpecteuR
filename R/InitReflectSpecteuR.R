@@ -95,7 +95,7 @@ InitReflectSpecteuR<-function(){
     with(ReflectEnv,{ 
          lespectro <- Define_Spectro(OOobj,lespectro)
          SetCorrections(OOobj,lespectro,Lin = 1, Dark = 0)
-         if (HighGainMode){
+         if (highGainMode){
            lespectro=GetHighGain(lespectro,OOobj$mywrap)
            SetHighGain(lespectro,OOobj$mywrap,highGainMode)
          }
