@@ -41,7 +41,6 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
     #########################
     
     pdf(pdfFile,paper= "USr",width=9.5,height = 7)
-    
     n <- length(pngFiles)
     
     for( i in 1:n) {
@@ -50,8 +49,8 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
       
       pngRaster <- readPNG(pngFile)
       
-      grid.raster(pngRaster, width=unit(0.9, "npc"), 
-                  height= unit(0.75, "npc"))
+      grid.raster(pngRaster, width=unit(0.8, "npc"), 
+                  height= unit(0.7, "npc"))
       
       if (i < n) plot.new()
       
@@ -328,24 +327,27 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                  
                  lm.out <- lm(y ~ x)   #Régression de Prédites vs Mesurées
                  
-                 leTitre <- paste(modelName," sur ",
-                                  paste(instCombi,collapse=' et '),
-                                  "- Valeur prédite:",
-                                  signif(pred,3),
-                                  " - Échantillon",echID)
+                 leTitre <- paste0("Sample ID : ",echID,"\n",
+                                   "Model name : ", modelName,"\n",
+                                  "Instrument(s) : ",paste(instCombi,collapse=' et '),"\n",
+                                  "Prediction : ", signif(pred,3), "\n",
+                                  "Date and time : ",format(Sys.time(), "%d %b %Y %T"),"\n"
+                                  )
+                 oldmar <- par("mar")
+                 par(mar=oldmar+c(0,0,3,0))
                  plot(x, y,
-                      main=leTitre,
                       type="p",col="black", pch=21, bg="cyan",
-                      xlab="Valeur mesurée",
-                      ylab="Valeur prédite", 
-                      cex=1.5, cex.lab=1.5, cex.main=1.6, cex.axis=1.25)
+                      xlab="Measured value",
+                      ylab="Prediction", 
+                      cex=1.5, cex.lab=1.5, cex.main=1.0, cex.axis=1.25)
+                 title(leTitre,adj=0)
                  abline(lm.out, col="blue",lwd=2)
                  abline(a=0,b=1,lty=2,lwd=2,col="black")
                  grid()
                  abline(h=pred,col="darkgreen",lwd=3)  #valeur pour l'échantillon
                  legend("bottomright", inset=c(0.01,0.01),
-                        legend=c("Données d'étalonnage", "Ligne 1:1",
-                                 "Régression","Prédiction"),
+                        legend=c("Model calibration samples", "1:1 line",
+                                 "Regression","Prediction"),
                         lty=c(NA,2,1,1), lwd=c(0,2,2,3),
                         pch=c(21,rep(NA,3)), col=c("black","black","blue","darkgreen"),
                         pt.bg = "cyan", pt.cex = 1.5, cex=1.5)
@@ -358,10 +360,11 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                                       intercept=0,
                                       estimate="adjCV")$val,3)
                  legend("topleft", inset=c(0.02,0.02),
-                        legend=c(paste0("R²(V.C) = ",R2),
+                        legend=c(paste0("R²(CV) = ",R2),
                                  paste0("RMSECV (adj) = ",RMSECV)),
                         cex=1.5
                         )
+                 par(mar=oldmar)
                  dev.off()
                  
                  
@@ -416,6 +419,29 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                    mescols_fill=rep(mescols_fill,recycling)
                    
                    par(mfrow=c(2,2))
+                   
+                   #TITRE et LÉGENDE
+                   plot.new()
+                   classes <- levels(toColor)
+                   nCl <- length(classes)
+                   legend("bottom",legend=c(classes,"Prediction","Limits"), ncol=3,
+                          inset=c(0.1,0),
+                          col=c(rep("black",nCl),"white","red"),
+                          lty = c(rep(0,nCl),0,2),
+                          lwd = c(rep(0,nCl),0,2),
+                          pt.bg=c(mescols_fill[1:nCl],"red",NA), 
+                          pch=c(rep(21,nCl),21,NA), 
+                          pt.cex = c(rep(2,nCl),3), cex=1.2, bty="n")
+                   
+                   leTitre <- paste0("Sample ID : ",echID,"\n",
+                                     "Model name : ", modelName,"\n",
+                                     "Instrument(s) : ",paste(instCombi,collapse=' et '),"\n",
+                                     "Date and time : ",format(Sys.time(), "%d %b %Y %T"),"\n")
+                   
+                   text(0,1,leTitre,
+                        adj=c(0,1), cex=1.3, font=2)
+                   
+                   
                    lesScores <- unModele$lePCA$x
                    
                    for (k in seq(1,4,2)){
@@ -431,25 +457,6 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                             ,col="white", bg="red", cex=3, pch=21)
                      abline(v=0,h=0,col="gray80",lty=3)
                    }
-                   #TITRE et LÉGENDE
-                   plot.new()
-                   classes <- levels(toColor)
-                   nCl <- length(classes)
-                   legend("bottomright",legend=c(classes,"Prédiction","Limites"),
-                          inset=c(0.1,0),
-                          col=c(rep("black",nCl),"white","red"),
-                          lty = c(rep(0,nCl),0,2),
-                          lwd = c(rep(0,nCl),0,2),
-                          pt.bg=c(mescols_fill[1:nCl],"red",NA), 
-                          pch=c(rep(21,nCl),21,NA), 
-                          pt.cex = c(rep(2,nCl),3), cex=1.2, bty="n")
-                   
-                   text(0,1,paste0(modelName,"\nsur\n",
-                                   paste(instCombi,collapse=' et '),
-                                   "\n", 
-                                   paste(names(preTreatData), collapse = ' et '),
-                                   "\n\nÉchantillon: ",echID),
-                        adj=c(0,1), cex=1.2, font=2)
                    
                    #ODist vs SDist 
                    #Calcul OD et SD pour l'échantillon
@@ -470,8 +477,8 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                         xlim = xLimits,
                         ylim = yLimits,
                         col = "black", bg=mescols_fill[toColor],
-                        xlab=toupper("Distance dans le modèle"),
-                        ylab = toupper("Distance résiduelle"),
+                        xlab="In-model distance",
+                        ylab = "Out-of-model distance",
                         cex.lab=1.5, cex.axis=1.5)
                    points(SD,OD,col="white", bg="red", cex=2.5, pch=21)
                    abline(h=unModele$dds$critOD, v=unModele$dds$critSD,
@@ -557,6 +564,29 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                      mescols_fill=rep(mescols_fill,recycling)
                      
                      par(mfrow=c(2,2))
+                     
+                     #TITRE et LÉGENDE
+                     plot.new()
+                     classes <- levels(toColor)
+                     nCl <- length(classes)
+                     legend("bottom",legend=c(classes,"Prediction","Limits"), ncol=3,
+                            inset=c(0.1,0),
+                            col=c(rep("black",nCl),"white","red"),
+                            lty = c(rep(0,nCl),0,2),
+                            lwd = c(rep(0,nCl),0,2),
+                            pt.bg=c(mescols_fill[1:nCl],"red",NA), 
+                            pch=c(rep(21,nCl),21,NA), 
+                            pt.cex = c(rep(2,nCl),3), cex=1.2, bty="n")
+                     
+                     leTitre <- paste0("Sample ID : ",echID,"\n",
+                                       "Model name : ", modelName,"\n",
+                                       "Instrument(s) : ",paste(instCombi,collapse=' et '),"\n",
+                                       "Date and time : ",format(Sys.time(), "%d %b %Y %T"),"\n")
+                     
+                     text(0,1,leTitre,
+                          adj=c(0,1), cex=1.3, font=2)
+                     
+                     
                      lesScores <- unModele$lesACPs[[i]]$x
                      
                      for (k in seq(1,4,2)){
@@ -572,24 +602,6 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                               ,col="white", bg="red", cex=3, pch=21)
                        abline(v=0,h=0,col="gray80",lty=3)
                      }
-                     #TITRE et LÉGENDE
-                     plot.new()
-                     classes <- levels(toColor)
-                     nCl <- length(classes)
-                     legend("bottomright",legend=c(classes,"Prédiction","Limites"),
-                            inset=c(0.1,0),
-                            col=c(rep("black",nCl),"white","red"),
-                            lty = c(rep(0,nCl),0,2),
-                            lwd = c(rep(0,nCl),0,2),
-                            pt.bg=c(mescols_fill[1:nCl],"red",NA), 
-                            pch=c(rep(21,nCl),21,NA), 
-                            pt.cex = c(rep(2,nCl),3), cex=1.2, bty="n")
-                     
-                     text(0,1,paste0(modelName,"\nsur\n",
-                                 paste(instCombi,collapse=' et '),
-                                 "\n\n", names(preTreatData)[i],
-                                 "\n\nÉchantillon: ",echID),
-                           adj=c(0,1), cex=1.5, font=2)
                      
                      #ODist vs SDist 
                      #Calcul OD et SD pour l'échantillon
@@ -610,8 +622,8 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                           xlim = xLimits,
                           ylim = yLimits,
                           col = "black", bg=mescols_fill[toColor],
-                          xlab=toupper("Distance dans le modèle"),
-                          ylab = toupper("Distance résiduelle"),
+                          xlab="In-model distance",
+                          ylab = "Out-of-model distance",
                           cex.lab=1.5, cex.axis=1.5)
                      points(SD,OD,col="white", bg="red", cex=2.5, pch=21)
                      abline(h=unModele$dds[[i]]$critOD, v=unModele$dds[[i]]$critSD,
@@ -738,25 +750,37 @@ ApplyModels <- function(Plan,lesInstruments,modelEnv,dataPath,dataSetID,
                nCl <- length(levels(plsda_cl))
                pred_prob <- Predict_plsda(unModele,probs=TRUE)
                dum1<-data.frame(cl=unModele$plsdaFit[[1]]$trainingData[,1],pred_prob)
-               dum2<-tidyr::gather(dum1,Pred,Prob,-cl,factor_key = TRUE)
+               dum2<-tidyr::gather(dum1,Prediction,Probability,-cl,factor_key = TRUE)
                levels(dum2$cl)=paste("True: ",levels(dum2$cl),sep="")
+               ddd <<- dum2
                if (plotMe){
+                 leTitre <- paste0("Sample ID : ",echID,"\n",
+                                   "Model name : ", modelName,"\n",
+                                   "Instrument(s) : ",paste(instCombi,collapse=' et '),"\n",
+                                   "Prediction : ", plsda_cl, "\n",
+                                   "Date and time : ",format(Sys.time(), "%d %b %Y %T"),"\n"
+                 )
+                 
                  nggs <- length(lesplots)
                  fPattern <- paste0("Plot",sprintf("%02d", nggs+1))
                  outfile <- tempfile(pattern=fPattern, fileext = '.png')
                  png(outfile, width = width, height = height)
                  
-                 p<-ggplot2::ggplot(dum2,ggplot2::aes(Pred,Prob))
+                 p<-ggplot2::ggplot(dum2,ggplot2::aes(Prediction,Probability))
                  p<-p+ggplot2::geom_boxplot()
-                 p<-p+geom_col(data=data.frame(cl=rep(paste0("PRÉDICTION - ",plsda_cl),nCl),
-                                                 Pred=colnames(plsda_probs),
-                                                 Prob=as.numeric(plsda_probs[1,])),
-                                 ggplot2::aes(Pred,Prob, fill=Prob), colour=NA) +
-                   scale_fill_gradient(low = "darkred", high = "green", na.value = NA)
+                 p<-p+geom_col(data=data.frame(cl=rep(paste0("PREDICTION - ",plsda_cl),nCl),
+                                                 Prediction=colnames(plsda_probs),
+                                                 Probability=as.numeric(plsda_probs[1,])),
+                                 ggplot2::aes(Prediction,Probability, fill=Probability), colour=NA) +
+                   scale_fill_gradient2(low = "blue", mid = "green", high="red",
+                                        midpoint=0.5,
+                                       na.value = NA,limits=c(0,1))
                  p<-p +ggplot2::facet_wrap(~cl)
                                            
                  p<-p + ggplot2::theme(text = element_text(size=20))
                  p<-p + ggplot2::theme(axis.text.x = element_text(angle=60, hjust=1, vjust=1))
+                 p<-p + ggtitle(leTitre) + 
+                   theme(plot.title = element_text(size = 14, face = "bold"))
                  print(p)
                  dev.off()
                  nggs <- length(lesplots)

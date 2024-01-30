@@ -179,6 +179,6 @@ F_Inst2$listDepth <- 2
 R_Inst$listDepth <- 1
 
 lesInstruments <- list(F_Inst, F_Inst2, R_Inst)                #options
-lesInstruments <- list(F_Inst) 
+#lesInstruments <- list(F_Inst) 
 
 lestypes <- lapply(lesInstruments, function(I) I$type)
