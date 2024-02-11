@@ -19,4 +19,4 @@ save.image(file="D:/Bernard/Desktop/Tmp/ApplyModelReady.RData")
 #Maintenant, on charge "D:/Bernard/Desktop/Tmp/ApplyModelReady.RData"
 # et on peut utiliser ApplyModels directement!
 
-ApplyModels(Plan,lesInstruments,modelEnv,"D:/Bernard/Desktop/Tmp","Dum")
+ApplyModels(Plan,lesInstruments,modelEnv,"C:/Users/crdaspectral/Desktop/Tmp","Dum")
