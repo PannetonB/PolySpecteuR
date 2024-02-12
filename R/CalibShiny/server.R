@@ -11,9 +11,11 @@ library(shiny)
 source(here::here("R","CalibShiny","OOInterface.R"))
 # cat("Start_OO\n")
 OOobj <<- Start_OO()
-spectroIDs <<- paste0(OOobj$lesspectros,"-",OOobj$serial_no)
-#Objet pour permettre d'accéder aux coefficients du spectro  
-ccoef <<- .jnew("com.oceanoptics.omnidriver.spectrometer.Coefficients")
+if (!is.null(OOobj)){
+  spectroIDs <<- paste0(OOobj$lesspectros,"-",OOobj$serial_no)
+  #Objet pour permettre d'accéder aux coefficients du spectro  
+  ccoef <<- .jnew("com.oceanoptics.omnidriver.spectrometer.Coefficients")
+}
 
 
 
@@ -22,6 +24,10 @@ function(input, output, session) {
  
   shinyjs::hide("loadNewCoeff")
   shinyjs::hide("calib")
+  
+  if (is.null(OOobj)){
+    shinyjs::alert("Pas de spectro détecté!")
+  }
   
   updateSelectInput(session,"lespectro",choices=spectroIDs,selected = spectroIDs[1])
   
@@ -47,41 +53,48 @@ function(input, output, session) {
   
   
   # cat("Define default spectro\n")
-  lespectro <<- Define_Spectro(OOobj,1L)
-  values$spectroNo <- 1
+  if (!is.null(OOobj)){
+    lespectro <<- Define_Spectro(OOobj,1L)
+    values$spectroNo <- 1
+  }else values$spectroNo <- NULL
   
   observeEvent(input$lespectro,{
-    values$spectroNo <- which(spectroIDs == input$lespectro)
+    if (!is.null(OOobj)){
+      values$spectroNo <- which(spectroIDs == input$lespectro)
+    }else stopApp()
   })
 
 
   
   observe({
     values$spectroNo
-    isolate({
-      if (length(values$spectroNo==1)){
-        # cat('Hum\n')
-        shinyjs::hide("loadNewCoeff")
-        shinyjs::hide("calib")
-        lespectro <<- Define_Spectro(OOobj,as.integer(values$spectroNo))
-        SetCorrections(OOobj,lespectro,Lin = 1, Dark = 0)
-        
-        #Pour permettre l'accès
-        OOobj$mywrap$insertKey("Mat429sky")
-        ccoef<<-OOobj$mywrap$getCalibrationCoefficientsFromEEProm(as.integer(lespectro$number))
-        OOobj$mywrap$removeKey()
-        values$coefTable[,2] <- format(ccoef$getWlCoefficients(),digits=8)
-        Define_Acq_Param (OOobj,
-                          lespectro,
-                          int_time = input$tint,
-                          boxcar = input$boxcar,
-                          nscans = input$nscans)
-        lespectro <<- Grab_Spectrum(leSpectro = lespectro,OOobj$mywrap)
-        values$sp <- lespectro$sp
-        
-        
-      }
-    })
+    if (!is.null(OOobj)){
+      isolate({
+        if (length(values$spectroNo==1)){
+          # cat('Hum\n')
+          shinyjs::hide("loadNewCoeff")
+          shinyjs::hide("calib")
+          lespectro <<- Define_Spectro(OOobj,as.integer(values$spectroNo))
+          SetCorrections(OOobj,lespectro,Lin = 1, Dark = 0)
+          
+          #Pour permettre l'accès
+          OOobj$mywrap$insertKey("Mat429sky")
+          ccoef<<-OOobj$mywrap$getCalibrationCoefficientsFromEEProm(as.integer(lespectro$number))
+          OOobj$mywrap$removeKey()
+          values$coefTable[,2] <- format(ccoef$getWlCoefficients(),digits=8)
+          Define_Acq_Param (OOobj,
+                            lespectro,
+                            int_time = input$tint,
+                            boxcar = input$boxcar,
+                            nscans = input$nscans)
+          lespectro <<- Grab_Spectrum(leSpectro = lespectro,OOobj$mywrap)
+          values$sp <- lespectro$sp
+          
+          
+        }
+      })
+    }
+      
   })
   
   observeEvent(input$calibPics,{
@@ -96,13 +109,15 @@ function(input, output, session) {
     values$picPlots=NULL
     values$calibPlot=NULL
     values$regPlot=NULL
-    Define_Acq_Param (OOobj,
+    if (!is.null(OOobj)){
+      Define_Acq_Param (OOobj,
                lespectro,
                int_time = input$tint,
                boxcar = input$boxcar,
                nscans = input$nscans)
-    lespectro <<- Grab_Spectrum(leSpectro = lespectro,OOobj$mywrap)
-    values$sp <- lespectro$sp
+      lespectro <<- Grab_Spectrum(leSpectro = lespectro,OOobj$mywrap)
+      values$sp <- lespectro$sp
+    }
   })
   
   observeEvent(input$calib,{
@@ -405,8 +420,10 @@ function(input, output, session) {
   })
   
   session$onSessionEnded(function() {
-    OOobj$mywrap$closeAllSpectrometers()
-    Quit_OO(OOobj)
+    if (!is.null(OOobj)){
+      OOobj$mywrap$closeAllSpectrometers()
+      Quit_OO(OOobj)
+    }
     stopApp()
   })
   
