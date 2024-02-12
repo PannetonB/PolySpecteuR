@@ -15,7 +15,7 @@ Dans *global.R*, mettre la valeur de la variable *demoPicCalib* à ***TRUE***.
 
 Ajouter un élément à la liste pics_calibration. Dans l'exemple plus bas, il y a 2 éléments ***sp1*** et ***sp2***. Les noms (***sp1***et ***sp2***) sont utilisé dans l'interface pour le choix du vecteur.
 
-``` R
+``` r
 pics_calibration <<- list(
   sp1 = c(253.652,313.155,334.148,365.0153,404.6563,435.8328,491.607,
                 546.0735,696.5431,727.2936,738.398,750.3869,763.5106,

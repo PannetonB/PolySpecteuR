@@ -167,6 +167,7 @@ function(input, output, session) {
     pics <- pics[!is.na(pics[,1]),]
     
     
+    old_mai <- par("mai")
     plot.new()
     par(mfrow=c(1,1))
     plot(lmda_old,rawdats,type="l",
@@ -205,6 +206,8 @@ function(input, output, session) {
       pics[k,6] <- cfs[1] + cfs[2]*pics[k,5] +cfs[3]*pics[k,5]^2
     }
 
+    
+    
     par(mfrow=c(rplot,cplot))
     x <- 0:(length(rawdats)-1)
     for (k in 1:nrow(pics)){
@@ -226,7 +229,10 @@ function(input, output, session) {
       lines(xs,ys,lty=2,col="blue")
     }
     values$picPlots <- recordPlot()
+    par(mai=old_mai)
     dev.off()
+    
+    
 
 
     # #Calcule la régression cubique pour la longueur d'onde en fonction du no de
@@ -268,12 +274,11 @@ function(input, output, session) {
     lmda_recall <- predict(lm3,newdata = data.frame(x=0:nWl, x2=(0:nWl)^2, x3=(0:nWl)^3))
     MSDiff <- mean((lmda_old-lmda_recall)^2)^0.5
     maxDiff <- max(abs(lmda_old-lmda_recall))
-    old_mai <- par("mai")
     par(mai=old_mai+c(0,0.2,0,0))
     plot(0:nWl,(lmda_old-lmda_recall),type="p",pch=".",
          xlab = "Pixel",
          ylab = bquote( lambda[~appareil] - lambda[~étalonnage] ~ "[nm]"),
-         cex.lab=1.5, cex.axis=1.3,
+         cex.lab=1, cex.axis=1,
          ylim = c(-maxDiff,maxDiff),
          main=bquote("RMS de la différence" == .(format(MSDiff,4))))
     grid()
@@ -386,11 +391,17 @@ function(input, output, session) {
   })
   
   output$regPlot <- renderPlot({
-    values$regPlot
+    if (is.null(values$regPlot)){
+      plot.new()
+    }else
+      values$regPlot
   })
   
   output$calib <- renderPlot({
-    values$calibPlot
+    if (is.null(values$calibPlot)){
+      plot.new()
+    }else
+      values$calibPlot
   })
   
   session$onSessionEnded(function() {
